@@ -270,9 +270,11 @@
     <script>
         // Use your existing user logic
         const db = {
-            "ramesh": { pass: "123", access: ["card-spinning", "card-summary"] },
-            "heena": { pass: "456", access: ["card-sales"] },
-            "mohit": { pass: "789", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking", "card-sales", "card-raw"] }
+            "prod": { pass: "123", access: ["card-spinning", "card-summary"] },
+            "pawan": { pass: "pawan123", access: ["card-spinning", "card-summary"] },
+            "rajrm": { pass: "raj@123", access: ["card-raw"] },
+            "sale": { pass: "sale@123", access: ["card-sales","card-tracking","card-spinning","card-stock"] },
+            "admin": { pass: "Kp@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking", "card-sales", "card-raw"] }
         };
 
         function handleLogin() {
