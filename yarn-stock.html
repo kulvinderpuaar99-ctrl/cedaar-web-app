@@ -48,11 +48,8 @@
 
         .search-input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 140px; font-size: 12px; }
 
-        /* --- PRINT LOGIC: SHOW TOTAL ONLY ON LAST PAGE --- */
         @media print {
             .sidebar, .filter-bar, .back-btn, .refresh-btn, .print-btn { display: none !important; }
-            
-            /* Hide columns: Order Qty (6), Opening (7,8,9), Packing (10,11,12), Sale (13,14,15) */
             th:nth-child(6), td:nth-child(6), 
             .open-head, .pack-head, .sale-head,
             tbody td:nth-child(7), tbody td:nth-child(8), tbody td:nth-child(9),
@@ -60,17 +57,13 @@
             tbody td:nth-child(13), tbody td:nth-child(14), tbody td:nth-child(15) {
                 display: none !important;
             }
-
             th[colspan="3"] { display: none !important; }
-
             #stockApp { padding: 0; background: white; height: auto; width: 100%; }
             .container { box-shadow: none; border: none; padding: 0; }
             table { width: 100%; font-size: 11pt; border: 1px solid black; }
             th, td { border: 1px solid black !important; color: black !important; background: white !important; }
             h2 { text-align: center; border: none; }
             h2:after { content: " - STOCK REPORT"; }
-
-            /* Forces footer to only appear once at the end of the table */
             tfoot { display: table-row-group !important; } 
             .hide-print-total { display: none !important; }
         }
@@ -89,12 +82,13 @@
       transition: color 0.3s;
     }
     .nav-link:hover { 
-      color: #e67e22; /* This matches your "CEDAAR LOGIN" orange color */
+      color: #e67e22; 
       text-decoration: underline; 
     }
   </style>
   <a href="index.html" class="nav-link">Home🏠</a>
   </nav>
+
 <div id="loginOverlay">
     <div class="login-card">
         <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
@@ -173,9 +167,21 @@
     window.onload = () => { document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); };
 
     function checkLogin() {
-        if (document.getElementById('userInp').value === "admin" && document.getElementById('passInp').value === "Kp@123") {
+        const username = document.getElementById('userInp').value;
+        const password = document.getElementById('passInp').value;
+
+        // --- MULTIPLE LOGIN IDs CONFIGURATION ---
+        const credentials = {
+            "admin": "Kp@123",
+            "mohit": "cedaar@2026",
+            "staff": "textile789"
+        };
+
+        if (credentials[username] && credentials[username] === password) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainAppWrapper').style.display = 'block';
+        } else {
+            alert("Incorrect Username or Password");
         }
     }
 
