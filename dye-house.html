@@ -161,6 +161,51 @@
     </div>
 </div>
 
+<datalist id="dyeList">
+    <option value="YELLOW CF-R">
+    <option value="RED CH-C">
+    <option value="YELLOW BR.2RFL">
+    <option value="YELLOW CW">
+    <option value="NAVY GB">
+    <option value="RED F2BL">
+    <option value="NAVY DS">
+<option value="NAVY BLUE S2G">
+<option value="YELLOW 7GD">
+<option value="G.YELLOW CGL">
+<option value="RED CF3B">
+<option value="BLUE CGNX">
+
+</datalist>
+
+<datalist id="chemList">
+    <option value="CAUSTIC">
+    <option value="DOVO ACID">
+    <option value="HV WETTING">
+    <option value="HEXAVLANT">
+    <option value="PARAFIL">
+    <option value="SETAMOL WS">
+    <option value="REB">
+    <option value="Salt">
+<option value="SILICON">
+<option value="OSIMOL OV">
+<option value="PEROXIDE">
+<option value="FBSN">
+<option value="PET">
+<option value="SIFA">
+<option value="NEUTAFAB">
+<option value="PKS">
+<option value="ANKUR SALT">
+<option value="SODA">
+<option value="DYEFIXER 2493">
+<option value="CHIRIMOL DYEFIXER">
+<option value="MEGNAFIXER">
+<option value="ADA">
+<option value="FINOX LUBE">
+<option value="HYDRO">
+<option value="BENZYL ALCOHOL">
+<option value="SODIUM NITRATE">
+</datalist>
+
 <script>
     const users = [
         { id: "admin", pass: "Kp@123", role: "Administrator" },
@@ -278,7 +323,6 @@
             }
             headerHtml += `<th style="background: #2e7d32;">${type === 'PACKING' ? "Total Gross WT" : "Prod (KG)"}</th>`;
 
-            // NEW DYE AND CHEMICAL COLUMNS FOR DYING DEPT
             if (type === 'DYING') {
                 headerHtml += `<th style="background:#8e44ad">Dye</th><th style="background:#2980b9">Chemical</th>`;
             }
@@ -324,7 +368,6 @@
             } else { rowHtml += `<td><input type="number" step="0.001" class="data-hank" oninput="calculateRow('${rowId}')"></td>`; }
             rowHtml += `<td><input type="text" class="${type === 'PACKING' ? 'data-total-gross' : 'data-prod'} prod-output" value="0.00" readonly></td>`;
             
-            // NEW INPUT FIELDS FOR DYE AND CHEMICAL
             if (type === 'DYING') {
                 rowHtml += `<td><input type="text" class="data-dye" readonly placeholder="Click to add" onclick="openItemPopup('${rowId}', 'data-dye')"></td>
                             <td><input type="text" class="data-chemical" readonly placeholder="Click to add" onclick="openItemPopup('${rowId}', 'data-chemical')"></td>`;
@@ -339,7 +382,7 @@
         if (type === 'SALE' && globalCustomerList.length > 0) populateCustomerDropdowns();
     }
 
-    /* LOGIC FOR DYE/CHEMICAL POPUP */
+    /* UPDATED LOGIC FOR DYE/CHEMICAL POPUP WITH QUICK SELECT */
     function openItemPopup(rowId, fieldClass) {
         activeMcRowId = rowId; activePopupField = fieldClass;
         document.getElementById('popupTitle').innerText = (fieldClass === 'data-dye' ? 'Add Dyes' : 'Add Chemicals');
@@ -349,7 +392,8 @@
 
     function addMoreToPopup() {
         const div = document.createElement('div'); div.className = "popup-row";
-        div.innerHTML = `<input type="text" placeholder="Item Name" class="p-item" style="flex:2;"><input type="number" placeholder="KG" class="p-kg" style="flex:1;">`;
+        const listId = activePopupField === 'data-dye' ? 'dyeList' : 'chemList';
+        div.innerHTML = `<input type="text" list="${listId}" placeholder="Item Name" class="p-item" style="flex:2;"><input type="number" placeholder="KG" class="p-kg" style="flex:1;">`;
         document.getElementById('popupItemContainer').appendChild(div);
     }
 
