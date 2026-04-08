@@ -1,284 +1,348 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEDAAR ERP - Production Intelligence</title>
     <style>
         :root {
-            --primary-bg: #f4f7f6;
-            --sidebar-bg: #2c3e50;
-            --accent-color: #e67e22;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            --border-color: #dfe6e9;
+            --sidebar-bg: #1e293b;
+            --main-bg: #f8fafc;
+            --accent: #f59e0b; /* Cedaar Orange */
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --card-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
 
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            background: var(--primary-bg); 
-            color: var(--text-main);
-        }
-
-        /* Dashboard Layout */
-        #dashboard { 
-            display: flex; 
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background-color: var(--main-bg);
+            color: var(--text-dark);
+            display: flex;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* Sidebar Styling */
-        .sidebar { 
-            width: 280px; 
-            background: var(--sidebar-bg); 
-            padding: 40px 20px; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
             color: white;
-            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            flex-shrink: 0;
         }
 
-        .company-branding {
-            margin-bottom: 50px;
+        .brand {
+            margin-bottom: 40px;
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        .company-name { 
-            font-size: 26px; 
-            font-weight: 800; 
-            color: #ffffff; 
-            margin: 0; 
-            letter-spacing: 1px;
-        }
-
-        .company-subtitle { 
-            color: var(--accent-color); 
-            font-size: 11px; 
-            letter-spacing: 2px; 
-            font-weight: bold; 
-            margin-top: 5px;
-            text-transform: uppercase;
-        }
-
-        /* Content Area */
-        .content-area {
-            flex: 1;
-            padding: 40px 60px;
-            overflow-y: auto;
-        }
-
-        .section-header {
-            margin-bottom: 30px;
-        }
-
-        .section-header h2 {
-            font-size: 28px;
-            color: var(--sidebar-bg);
+        .brand h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             margin: 0;
-            font-weight: 700;
         }
 
-        /* Controls Card */
-        .controls-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            margin-bottom: 35px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        .brand span {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-weight: 600;
         }
 
-        .control-group { display: flex; flex-direction: column; }
-        .control-group label { 
-            font-size: 11px; 
-            color: var(--text-muted); 
-            text-transform: uppercase; 
-            margin-bottom: 8px; 
-            font-weight: 700;
-        }
-        
-        input[type="date"] {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 12px;
-            border-radius: 6px;
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: #94a3b8;
+            text-decoration: none;
             font-size: 14px;
-            outline: none;
-            transition: border 0.3s;
+            font-weight: 500;
+            margin-bottom: 5px;
+            transition: all 0.2s;
         }
 
-        input[type="date"]:focus {
-            border-color: var(--accent-color);
-        }
-
-        /* Report Grid */
-        .report-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
-            gap: 20px; 
-        }
-
-        .btn-download { 
-            background: var(--card-bg);
-            color: var(--sidebar-bg);
-            border: 1px solid var(--border-color);
-            padding: 25px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            transition: all 0.25s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            text-align: left;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .btn-download:hover { 
-            background: #fff;
-            border-color: var(--accent-color);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        }
-
-        .btn-download .icon-circle {
-            background: #fdf2e9;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-
-        .btn-download:hover .icon-circle {
-            background: var(--accent-color);
+        .nav-item.active {
+            background-color: rgba(255,255,255,0.05);
             color: white;
         }
 
-        .btn-download span.label { 
-            font-size: 14px; 
+        .nav-item:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .main-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .header-area h2 {
+            font-size: 30px;
             font-weight: 700;
-            color: var(--sidebar-bg);
+            margin: 0;
+            color: var(--text-dark);
         }
 
-        .btn-download span.sub-text {
+        .header-area p {
+            color: var(--text-light);
+            margin: 5px 0 0 0;
+        }
+
+        /* Filter Section */
+        .filter-bar {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 40px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="date"] {
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            color: var(--text-dark);
+            transition: border-color 0.2s;
+        }
+
+        input[type="date"]:focus {
+            border-color: var(--accent);
+            ring: 2px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* Report Grid */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .report-card .icon-wrap {
+            width: 48px;
+            height: 48px;
+            background: #fff7ed;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            transition: background 0.3s;
+        }
+
+        .report-card:hover .icon-wrap {
+            background: var(--accent);
+            color: white;
+        }
+
+        .report-card h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .report-card p {
+            font-size: 13px;
+            color: var(--text-light);
+            margin: 8px 0 0 0;
+        }
+
+        .download-hint {
+            margin-top: 20px;
             font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 5px;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s;
         }
 
-        .footer-info {
+        .report-card:hover .download-hint {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .footer-branding {
             margin-top: auto;
             font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            text-align: center;
-            line-height: 1.6;
+            color: #64748b;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+        }
+
+        /* Loading Animation */
+        .loader {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: none;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-<div id="dashboard">
-    <div class="sidebar">
-        <div class="company-branding">
-            <h1 class="company-name">CEDAAR</h1>
-            <p class="company-subtitle">Textile Limited</p>
+    <aside class="sidebar">
+        <div class="brand">
+            <h1>CEDAAR</h1>
+            <span>Textile Limited</span>
         </div>
         
-        <div style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 10px; font-weight: 600;">REPORTS CENTER</div>
-        <p style="font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.8);">Select a date range to generate and export production data.</p>
-        
-        <div class="footer-info">
-            Prepared By: Raghvendra Pal<br>
-            Cedaar ERP v2.2.0
-        </div>
-    </div>
+        <a href="#" class="nav-item active">📊 Report Dashboard</a>
+        <a href="index.html" class="nav-item">🏠 Return Home</a>
 
-    <div class="content-area">
-        <div class="section-header">
-            <h2>Production Data Export</h2>
+        <div class="footer-branding">
+            System Admin: Raghvendra Pal<br>
+            v3.0 Enterprise Edition
+        </div>
+    </aside>
+
+    <main class="main-container">
+        <div class="header-area">
+            <div>
+                <h2>Production Reports</h2>
+                <p>Data visualization and export center for all mill departments.</p>
+            </div>
         </div>
 
-        <div class="controls-card">
-            <div class="control-group">
+        <section class="filter-bar">
+            <div class="filter-group">
                 <label>Date From</label>
                 <input type="date" id="reportStartDate">
             </div>
-            <div class="control-group">
+            <div class="filter-group">
                 <label>Date To</label>
                 <input type="date" id="reportEndDate">
             </div>
             <div style="margin-left: auto; text-align: right;">
-                <div style="color: var(--accent-color); font-weight: 700; font-size: 12px;">SYSTEM READY</div>
-                <div style="color: var(--text-muted); font-size: 11px;">Format: CSV Spreadsheet</div>
+                <span style="font-size: 12px; color: var(--text-light); display: block;">File Format</span>
+                <span style="font-size: 14px; font-weight: 700; color: var(--text-dark);">CSV Spreadsheet</span>
             </div>
-        </div>
+        </section>
 
         <div class="report-grid" id="reportButtonContainer">
             </div>
-    </div>
-</div>
+    </main>
 
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
     const departments = ["MIXING", "CARDING", "DRAWFRAME", "SIMPLEX", "RING", "AUTOCONER", "TFO", "PACKING", "SALE"];
 
-    function initDashboard() {
+    function init() {
         const container = document.getElementById('reportButtonContainer');
         container.innerHTML = departments.map(d => `
-            <button class="btn-download" onclick="downloadData('${d}')">
-                <div class="icon-circle">📥</div>
-                <span class="label">${d}</span>
-                <span class="sub-text">Export departmental records</span>
-            </button>
+            <div class="report-card" onclick="downloadReport('${d}', this)">
+                <div class="icon-wrap">📉</div>
+                <h3>${d}</h3>
+                <p>Extract detailed production and efficiency metrics for ${d}.</p>
+                <div class="download-hint">GENERATE EXCEL →</div>
+            </div>
         `).join('');
     }
 
-    async function downloadData(dept) {
-        const btn = event.currentTarget;
-        const iconBox = btn.querySelector('.icon-circle');
+    async function downloadReport(dept, element) {
         const fromDate = document.getElementById('reportStartDate').value;
         const toDate = document.getElementById('reportEndDate').value;
 
-        if(!fromDate || !toDate) { 
-            alert("Please select both From and To dates"); 
-            return; 
+        if(!fromDate || !toDate) {
+            alert("Security Check: Please select a valid date range first.");
+            return;
         }
 
-        iconBox.innerHTML = "⏳";
-        btn.disabled = true;
+        const iconWrap = element.querySelector('.icon-wrap');
+        const originalIcon = iconWrap.innerHTML;
+        iconWrap.innerHTML = '<div class="loader" style="display:block"></div>';
+        element.style.pointerEvents = "none";
 
         try {
-            const resp = await fetch(`${API_URL}?Department=${dept}`);
-            let data = await resp.json();
+            const response = await fetch(`${API_URL}?Department=${dept}`);
+            const data = await response.json();
 
-            if (!data || data.length === 0) { 
-                alert("No data available for " + dept); 
+            if (!data || data.length === 0) {
+                alert("No records found in the database for " + dept);
             } else {
-                let filteredData = data.filter(row => {
+                const filtered = data.filter(row => {
                     if (!row["Date"]) return false;
-                    let d = new Date(row["Date"]);
-                    let rowStr = d.getFullYear() + '-' + 
+                    const d = new Date(row["Date"]);
+                    const rowStr = d.getFullYear() + '-' + 
                                  String(d.getMonth() + 1).padStart(2, '0') + '-' + 
                                  String(d.getDate()).padStart(2, '0');
                     return (rowStr >= fromDate && rowStr <= toDate);
                 });
 
-                if (filteredData.length === 0) {
-                    alert("No data found for the selected date range.");
+                if (filtered.length === 0) {
+                    alert("No data exists for the selected timeframe.");
                 } else {
-                    const headers = Object.keys(filteredData[0]);
+                    const headers = Object.keys(filtered[0]);
                     const csv = [
                         headers.join(","),
-                        ...filteredData.map(row => headers.map(h => {
+                        ...filtered.map(row => headers.map(h => {
                             if (h === "Date" && row[h]) {
-                                let d = new Date(row[h]);
+                                const d = new Date(row[h]);
                                 return `"${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}"`;
                             }
                             return `"${row[h] || ''}"`;
@@ -289,21 +353,21 @@
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `${dept}_Report_${fromDate}_to_${toDate}.csv`;
+                    a.download = `CED_${dept}_REPORT_${fromDate}.csv`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
                 }
             }
         } catch (e) {
-            alert("Connection error. Please try again.");
-            console.error(e);
+            alert("Connection lost. Please check your network.");
         }
-        iconBox.innerHTML = "📥";
-        btn.disabled = false;
+
+        iconWrap.innerHTML = originalIcon;
+        element.style.pointerEvents = "auto";
     }
 
-    initDashboard();
+    init();
 </script>
 </body>
 </html>
