@@ -2,201 +2,221 @@
 <html>
 <head>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            background: #0f0f10; 
-            color: #e0e0e0;
+        :root {
+            --primary-bg: #f4f7f6;
+            --sidebar-bg: #2c3e50;
+            --accent-color: #e67e22;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --border-color: #dfe6e9;
         }
 
-        /* Top Navigation */
-        nav {
-            background-color: #1a1a1c; 
-            padding: 15px 30px; 
-            text-align: left; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            border-bottom: 1px solid #333;
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            background: var(--primary-bg); 
+            color: var(--text-main);
         }
-        .nav-link { 
-            color: #ffffff; 
-            text-decoration: none; 
-            font-weight: 500; 
-            font-size: 16px; 
-            transition: color 0.3s; 
-        }
-        .nav-link:hover { color: #e67e22; }
 
         /* Dashboard Layout */
         #dashboard { 
             display: flex; 
-            min-height: calc(100vh - 60px); 
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('Gemini_Generated_Image_pvg3hepvg3hepvg3.jpg'); 
-            background-size: cover; 
-            background-position: center; 
+            height: 100vh;
         }
 
+        /* Sidebar Styling */
         .sidebar { 
-            width: 300px; 
-            background: rgba(20, 20, 22, 0.95); 
-            padding: 40px 25px; 
+            width: 280px; 
+            background: var(--sidebar-bg); 
+            padding: 40px 20px; 
             display: flex; 
             flex-direction: column; 
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-            border-right: 1px solid #333;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            color: white;
+            z-index: 10;
         }
 
         .company-branding {
-            margin-bottom: 40px;
-            border-left: 4px solid #e67e22;
-            padding-left: 15px;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .company-name { 
-            font-size: 24px; 
+            font-size: 26px; 
             font-weight: 800; 
-            color: #fff; 
+            color: #ffffff; 
             margin: 0; 
             letter-spacing: 1px;
         }
 
         .company-subtitle { 
-            color: #e67e22; 
-            font-size: 10px; 
+            color: var(--accent-color); 
+            font-size: 11px; 
             letter-spacing: 2px; 
             font-weight: bold; 
             margin-top: 5px;
+            text-transform: uppercase;
         }
 
-        /* Main Content Area */
+        /* Content Area */
         .content-area {
             flex: 1;
-            padding: 50px;
+            padding: 40px 60px;
             overflow-y: auto;
         }
 
         .section-header {
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .section-header h2 {
-            font-size: 32px;
-            font-weight: 300;
-            color: #fff;
+            font-size: 28px;
+            color: var(--sidebar-bg);
             margin: 0;
+            font-weight: 700;
         }
 
-        /* Date Controls Card */
+        /* Controls Card */
         .controls-card {
-            background: #1a1a1c;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 12px;
             display: flex;
-            gap: 30px;
+            gap: 25px;
             align-items: center;
-            margin-bottom: 40px;
-            border: 1px solid #333;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 35px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         .control-group { display: flex; flex-direction: column; }
         .control-group label { 
             font-size: 11px; 
-            color: #888; 
+            color: var(--text-muted); 
             text-transform: uppercase; 
             margin-bottom: 8px; 
-            letter-spacing: 1px;
+            font-weight: 700;
         }
         
         input[type="date"] {
-            background: #2a2a2d;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 10px 15px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 12px;
             border-radius: 6px;
             font-size: 14px;
             outline: none;
+            transition: border 0.3s;
+        }
+
+        input[type="date"]:focus {
+            border-color: var(--accent-color);
         }
 
         /* Report Grid */
         .report-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
             gap: 20px; 
         }
 
         .btn-download { 
-            background: #212124; 
-            color: #fff; 
-            border: 1px solid #333; 
-            padding: 25px 20px; 
+            background: var(--card-bg);
+            color: var(--sidebar-bg);
+            border: 1px solid var(--border-color);
+            padding: 25px; 
             border-radius: 12px; 
             cursor: pointer; 
-            font-weight: 600; 
-            text-align: left;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s ease;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            height: 120px;
+            align-items: flex-start;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .btn-download:hover { 
-            background: #e67e22; 
-            border-color: #e67e22;
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(230, 126, 34, 0.2);
+            background: #fff;
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         }
 
-        .btn-download span.icon { font-size: 24px; margin-bottom: 10px; }
-        .btn-download span.label { font-size: 14px; letter-spacing: 0.5px; }
+        .btn-download .icon-circle {
+            background: #fdf2e9;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .btn-download:hover .icon-circle {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-download span.label { 
+            font-size: 14px; 
+            font-weight: 700;
+            color: var(--sidebar-bg);
+        }
+
+        .btn-download span.sub-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
 
         .footer-info {
             margin-top: auto;
             font-size: 11px;
-            color: #555;
+            color: rgba(255,255,255,0.4);
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #222;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
 
-<nav>
-    <a href="index.html" class="nav-link">Home🏠</a>
-</nav>
-
 <div id="dashboard">
     <div class="sidebar">
         <div class="company-branding">
             <h1 class="company-name">CEDAAR</h1>
-            <p class="company-subtitle">TEXTILE LIMITED</p>
+            <p class="company-subtitle">Textile Limited</p>
         </div>
         
-        <div style="color: #666; font-size: 12px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Analytics Dashboard</div>
+        <div style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 10px; font-weight: 600;">REPORTS CENTER</div>
+        <p style="font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.8);">Select a date range to generate and export production data.</p>
         
         <div class="footer-info">
-            <strong>System v2.1.0</strong><br>
-            Enterprise Resource Planning
+            Prepared By: Raghvendra Pal<br>
+            Cedaar ERP v2.2.0
         </div>
     </div>
 
     <div class="content-area">
         <div class="section-header">
-            <h2>Production Data Reports</h2>
+            <h2>Production Data Export</h2>
         </div>
 
         <div class="controls-card">
             <div class="control-group">
-                <label>Date Range From</label>
+                <label>Date From</label>
                 <input type="date" id="reportStartDate">
             </div>
             <div class="control-group">
-                <label>Date Range To</label>
+                <label>Date To</label>
                 <input type="date" id="reportEndDate">
             </div>
-            <div style="color: #444; font-size: 12px; margin-left: auto;">
-                Select range to enable downloads
+            <div style="margin-left: auto; text-align: right;">
+                <div style="color: var(--accent-color); font-weight: 700; font-size: 12px;">SYSTEM READY</div>
+                <div style="color: var(--text-muted); font-size: 11px;">Format: CSV Spreadsheet</div>
             </div>
         </div>
 
@@ -213,15 +233,16 @@
         const container = document.getElementById('reportButtonContainer');
         container.innerHTML = departments.map(d => `
             <button class="btn-download" onclick="downloadData('${d}')">
-                <span class="icon">📥</span>
-                <span class="label">DOWNLOAD ${d} REPORT</span>
+                <div class="icon-circle">📥</div>
+                <span class="label">${d}</span>
+                <span class="sub-text">Export departmental records</span>
             </button>
         `).join('');
     }
 
     async function downloadData(dept) {
         const btn = event.currentTarget;
-        const originalHtml = btn.innerHTML;
+        const iconBox = btn.querySelector('.icon-circle');
         const fromDate = document.getElementById('reportStartDate').value;
         const toDate = document.getElementById('reportEndDate').value;
 
@@ -230,7 +251,7 @@
             return; 
         }
 
-        btn.innerHTML = `<span class="icon">⏳</span><span class="label">FETCHING DATA...</span>`;
+        iconBox.innerHTML = "⏳";
         btn.disabled = true;
 
         try {
@@ -278,11 +299,10 @@
             alert("Connection error. Please try again.");
             console.error(e);
         }
-        btn.innerHTML = originalHtml;
+        iconBox.innerHTML = "📥";
         btn.disabled = false;
     }
 
-    // Initialize the UI
     initDashboard();
 </script>
 </body>
