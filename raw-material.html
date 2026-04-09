@@ -99,12 +99,11 @@
       transition: color 0.3s;
     }
     .nav-link:hover { 
-      color: #e67e22; /* This matches your "CEDAAR LOGIN" orange color */
+      color: #e67e22; 
       text-decoration: underline; 
     }
   </style>
   <a href="index.html" class="nav-link">Home🏠</a>
-    
 </nav>
 
 <div id="loginOverlay">
@@ -301,12 +300,10 @@
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
     
-    // --- CONFIGURE YOUR MULTIPLE LOGINS HERE ---
     const VALID_USERS = {
         "admin": "Kp@123",
         "rajrm": "raj@123"
     };
-    // -------------------------------------------
 
     let currentUser = "";
     let cachedReceipts = [];
@@ -320,8 +317,6 @@
     function handleLogin() {
         const id = document.getElementById('userId').value;
         const pass = document.getElementById('userPass').value;
-
-        // Validating from the list of valid users
         if(VALID_USERS[id] && VALID_USERS[id] === pass) {
             currentUser = id;
             document.getElementById('loginOverlay').style.display = 'none';
@@ -335,7 +330,6 @@
         document.querySelectorAll('.scroll-container').forEach(div => div.style.display = 'none');
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById(appId + 'App').style.display = 'block';
-
         if(appId === 'rawRec') {
             document.getElementById('recDate').valueAsDate = new Date();
             loadHistory('RAW_MATERIAL_REC', 'recHistoryBody');
@@ -376,7 +370,12 @@
                 if(row["Date"]) {
                     const d = new Date(row["Date"]);
                     dateStr = d.toLocaleDateString('en-GB'); 
-                    isoDate = d.toISOString().split('T')[0];
+                    
+                    // FIXED: Generate YYYY-MM-DD manually to avoid UTC shift
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    isoDate = `${y}-${m}-${day}`;
                 }
                 
                 if(dept === 'RAW_MATERIAL_REC') {
@@ -429,16 +428,13 @@
             const proc = (data, type) => {
                 data.forEach(item => {
                     if (!item["Date"]) return;
-
                     const dateVal = new Date(item["Date"]);
                     const year = dateVal.getFullYear();
                     const monthNum = String(dateVal.getMonth() + 1).padStart(2, '0');
                     const itemMonth = `${year}-${monthNum}`;
-                    
                     const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + (item["Item Description"]||"").trim().toUpperCase();
                     if(!globalStockMap[k]) globalStockMap[k] = { category: (item["Category"]||""), item: (item["Item Description"]||""), opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 };
                     const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bales"]||0), a = parseFloat(item["Total Amount"]||0);
-                    
                     if(itemMonth < month) { 
                         globalStockMap[k].opKg += (type==='r'?q:-q); globalStockMap[k].opBal += (type==='r'?b:-b); globalStockMap[k].opAmt += (type==='r'?a:-a); 
                     }
@@ -540,31 +536,17 @@
     function downloadFilteredExcel(tableId, fromId, toId, fileName) {
         const fromDate = document.getElementById(fromId).value;
         const toDate = document.getElementById(toId).value;
-        
-        if(!fromDate || !toDate) {
-            alert("Please select both From and To dates");
-            return;
-        }
-
+        if(!fromDate || !toDate) { alert("Please select both From and To dates"); return; }
         const table = document.getElementById(tableId);
         const tempTable = document.createElement('table');
-        
-        // Copy original header
         tempTable.appendChild(table.rows[0].cloneNode(true));
-
-        // Filter rows based on date range
         Array.from(table.rows).slice(1).forEach(row => {
             const rowDate = row.getAttribute('data-date');
             if(rowDate && rowDate >= fromDate && rowDate <= toDate) {
                 tempTable.appendChild(row.cloneNode(true));
             }
         });
-
-        if(tempTable.rows.length <= 1) {
-            alert("No data found for this date range");
-            return;
-        }
-
+        if(tempTable.rows.length <= 1) { alert("No data found for this date range"); return; }
         XLSX.writeFile(XLSX.utils.table_to_book(tempTable), `${fileName}_${fromDate}_to_${toDate}.xlsx`);
     }
 
