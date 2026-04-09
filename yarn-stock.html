@@ -3,22 +3,7 @@
 <head>
     <style>
         /* --- ALL ORIGINAL STYLES UNCHANGED --- */
-        #loginOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
-            display: flex; justify-content: center; align-items: center; z-index: 9999;
-        }
-        .login-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center; }
-        .login-card h2 { margin-top: 0; color: #2c3e50; border: none; padding: 0; }
-        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        
-        #mainAppWrapper { display: none; }
-        #dashboard { display: flex; height: 100vh; background-color: #2c3e50; }
-        .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.5); }
-        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; }
-        
-        #stockApp { display: none; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
+        #stockApp { display: block; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; }
         .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
         h2 { color: #2c3e50; border-left: 5px solid #e67e22; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
@@ -37,7 +22,14 @@
         th { background: #34495e; color: white; padding: 8px; text-align: center; border: 1px solid #455a64; }
         td { padding: 6px; border: 1px solid #dee2e6; text-align: center; }
         tr:nth-child(even) { background-color: #f8f9fa; }
-        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+        
+        /* Styled Home Button to match original Back Button */
+        .back-btn { 
+            display: inline-block; text-decoration: none; background:#2c3e50; border:none; 
+            color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; 
+            font-weight:bold; margin-bottom:10px; font-size: 13px;
+        }
+        
         .refresh-btn { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .print-btn { background: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; }
         
@@ -49,7 +41,7 @@
         .search-input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 140px; font-size: 12px; }
 
         @media print {
-            .sidebar, .filter-bar, .back-btn, .refresh-btn, .print-btn { display: none !important; }
+            .filter-bar, .back-btn, .refresh-btn, .print-btn { display: none !important; }
             th:nth-child(6), td:nth-child(6), 
             .open-head, .pack-head, .sale-head,
             tbody td:nth-child(7), tbody td:nth-child(8), tbody td:nth-child(9),
@@ -70,48 +62,11 @@
     </style>
 </head>
 <body>
-    
- <nav style="background-color: #000000; padding: 15px 0; text-align: left; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-  <style>
-    .nav-link { 
-      color: #ffffff; 
-      text-decoration: none; 
-      margin: 0 15px; 
-      font-weight: 500; 
-      font-size: 16px;
-      transition: color 0.3s;
-    }
-    .nav-link:hover { 
-      color: #e67e22; 
-      text-decoration: underline; 
-    }
-  </style>
-  <a href="index.html" class="nav-link">Home🏠</a>
-  </nav>
-
-<div id="loginOverlay">
-    <div class="login-card">
-        <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
-        <input type="text" id="userInp" class="login-input" placeholder="Username">
-        <input type="password" id="passInp" class="login-input" placeholder="Password">
-        <button onclick="checkLogin()" class="login-btn">LOGIN</button>
-    </div>
-</div>
 
 <div id="mainAppWrapper">
-    <div id="dashboard">
-        <div class="sidebar">
-            <div class="menu-title">Main Menu</div>
-            <button class="nav-btn" onclick="showStockBalance()" style="background: #8e44ad;">📦 Stock Balance</button>
-            <button class="nav-btn" onclick="location.reload()" style="background: #c0392b; margin-top: 20px;">🔒 Logout</button>
-        </div>
-        <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-             <h1 style="color:white; opacity:0.1; font-size:50px;">CEDAAR TEXTILE LIMITED</h1>
-        </div>
-    </div>
-
     <div id="stockApp">
-        <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+        <a href="index.html" class="back-btn">🏠 Home</a>
+        
         <div class="container">
             <h2>Article-Wise Stock Balance</h2>
             
@@ -127,7 +82,7 @@
                 </div>
 
                 <div style="margin-top: 15px; display: flex; gap: 5px;">
-                    <button class="refresh-btn" onclick="showStockBalance()">🔄 Refresh</button>
+                    <button class="refresh-btn" onclick="showStockBalance()">🔄 Refresh Data</button>
                     <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
                 </div>
                 
@@ -164,32 +119,12 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
     let fullStockData = []; 
 
-    window.onload = () => { document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); };
-
-    function checkLogin() {
-        const username = document.getElementById('userInp').value;
-        const password = document.getElementById('passInp').value;
-
-        // --- MULTIPLE LOGIN IDs CONFIGURATION ---
-        const credentials = {
-            "admin": "Kp@123",
-            "sale": "sale@123",
-            "mis": "123"
-        };
-
-        if (credentials[username] && credentials[username] === password) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainAppWrapper').style.display = 'block';
-        } else {
-            alert("Incorrect Username or Password");
-        }
-    }
-
-    function goBack() { document.getElementById('stockApp').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; }
+    window.onload = () => { 
+        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); 
+        showStockBalance(); // Automatically load data on startup
+    };
 
     async function showStockBalance() {
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('stockApp').style.display = 'block';
         const selectedMonth = document.getElementById('reportMonth').value;
 
         try {
