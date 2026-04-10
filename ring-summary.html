@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; }
+        #mainAppWrapper { display: flex; height: 100vh; }
+        .sidebar { width: 260px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; text-align: left; font-weight: bold; }
+        .nav-btn:hover { background: #e67e22; }
+        #contentArea { flex: 1; overflow-y: auto; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-controls { display: flex; gap: 15px; background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+        .control-field { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; }
+        .column-picker { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; display: none; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 5px; }
+        .column-picker label { font-size: 10px; text-transform: none; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .table-container { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #2c3e50; color: white; padding: 10px 5px; border: 1px solid #34495e; white-space: nowrap; }
+        td { padding: 8px 5px; border: 1px solid #ddd; text-align: center; }
+        .pos-val { color: green; font-weight: bold; }
+        .neg-val { color: red; font-weight: bold; }
+        .total-row { background: #2c3e50 !important; color: white; font-weight: bold; }
+        .total-row td { border: 1px solid #34495e; }
+        .btn-fetch { background: #d35400; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-toggle { background: #7f8c8d; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div id="mainAppWrapper">
+    <div class="sidebar">
+        <h3 style="color:#e67e22; text-align:center;">CEDAAR TEXTILE</h3>
+        <button class="nav-btn" onclick="location.reload()">🏠 Home Dashboard</button>
+        <button class="nav-btn">📊 Ring Summary</button>
+        <div style="margin-top: auto; font-size: 10px; color: #bdc3c7; text-align: center;">v2.0.34</div>
+    </div>
+
+    <div id="contentArea">
+        <div class="container">
+            <h2>Ring Production Summary (Grouped by Article)</h2>
+            <div class="header-controls">
+                <div class="control-field"><label>Date</label><input type="date" id="reportDate"></div>
+                <div class="control-field">
+                    <label>Shift</label>
+                    <select id="reportShift">
+                        <option value="ALL">All Shifts</option>
+                        <option value="A">Shift A</option>
+                        <option value="B">Shift B</option>
+                        <option value="C">Shift C</option>
+                    </select>
+                </div>
+                <button class="btn-fetch" onclick="generateRingSummary()">GENERATE REPORT</button>
+                <button class="btn-toggle" onclick="toggleColumnPicker()">⚙️ COLUMNS</button>
+            </div>
+
+            <div id="colPicker" class="column-picker"></div>
+            
+            <div class="table-container">
+                <table id="summaryTable">
+                    <thead>
+                        <tr id="tableHeaderRow">
+                            <th data-col="0">Article</th><th data-col="1">Count</th><th data-col="2">Actual Spindle</th>
+                            <th data-col="3">Idol Spindle</th><th data-col="4">Work Spindle</th><th data-col="5">Shd. Grms.</th>
+                            <th data-col="6">Actual Grms.</th><th data-col="7">Shd. Prod.</th><th data-col="8">Actual Prod.</th>
+                            <th data-col="9">Prod. Gap</th><th data-col="10">Shd. Speed</th><th data-col="11">Machine Speed</th>
+                            <th data-col="12">Machine TPI</th><th data-col="13">Utilization</th><th data-col="14">Prd. Effi%</th>
+                            <th data-col="15">Speed Loss%</th><th data-col="16">Utili Loss%</th><th data-col="17">Idol Loss%</th>
+                            <th data-col="18">Total Effi%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody">
+                        <tr><td colspan="19" style="padding:40px;">Select filters and click Generate.</td></tr>
+                    </tbody>
+                    <tfoot id="summaryTableFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+
+    const headerRow = document.getElementById('tableHeaderRow');
+    const picker = document.getElementById('colPicker');
+    Array.from(headerRow.cells).forEach((cell, index) => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" checked onchange="toggleCol(${index})" data-index="${index}"> ${cell.innerText}`;
+        picker.appendChild(label);
+    });
+
+    function toggleColumnPicker() { picker.style.display = picker.style.display === 'grid' ? 'none' : 'grid'; }
+
+    function toggleCol(index) {
+        const show = document.querySelector(`input[data-index="${index}"]`).checked;
+        const cells = document.querySelectorAll(`[data-col="${index}"]`);
+        cells.forEach(c => c.style.display = show ? '' : 'none');
+        
+        // Handle Body
+        const rows = document.getElementById('summaryTableBody').rows;
+        for(let r=0; r<rows.length; r++) { if(rows[r].cells[index]) rows[r].cells[index].style.display = show ? '' : 'none'; }
+        // Handle Footer
+        const footRow = document.getElementById('summaryTableFoot').rows[0];
+        if(footRow && footRow.cells[index]) footRow.cells[index].style.display = show ? '' : 'none';
+    }
+
+    async function generateRingSummary() {
+        const reportDate = document.getElementById('reportDate').value;
+        const reportShift = document.getElementById('reportShift').value;
+        const tbody = document.getElementById('summaryTableBody');
+        const tfoot = document.getElementById('summaryTableFoot');
+        
+        if (!reportDate) return alert("Select a date.");
+        tbody.innerHTML = '<tr><td colspan="19">Calculating Totals...</td></tr>';
+        tfoot.innerHTML = "";
+
+        try {
+            const response = await fetch(`${API_URL}?Department=RING`); 
+            const allData = await response.json();
+
+            const filtered = allData.filter(row => {
+                if(!row.Date) return false;
+                const d = new Date(row.Date);
+                const rowDateClean = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                const rowShift = (row["Production Shift"] || "").toString().toUpperCase();
+                const targetShift = reportShift.toUpperCase();
+                const shiftMatch = (targetShift === "ALL") ? true : rowShift.includes(targetShift);
+                return rowDateClean === reportDate && shiftMatch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="19">No entries found.</td></tr>';
+                return;
+            }
+
+            const grouped = filtered.reduce((acc, row) => {
+                const art = row.Article || "Unknown";
+                if (!acc[art]) {
+                    acc[art] = { countSum: 0, actSpdl: 0, idolSpdl: 0, actProd: 0, shdGrmSum: 0, shdSpeedSum: 0, mSpeedSum: 0, mTpiSum: 0, detMinSum: 0, availMinSum: 0, rows: 0 };
+                }
+                acc[art].actSpdl += parseFloat(row["Number of Spindles"] || 0);
+                acc[art].idolSpdl += parseFloat(row["Idol Spindles"] || 0);
+                acc[art].actProd += parseFloat(row["Actual Production"] || 0);
+                acc[art].detMinSum += parseFloat(row["Detention Minutes"] || 0);
+                acc[art].availMinSum += parseFloat(row["Avail Minutes"] || 0);
+                acc[art].countSum += parseFloat(row["Count"] || 0);
+                acc[art].shdGrmSum += parseFloat(row["SHD. GRM."] || 0);
+                acc[art].shdSpeedSum += parseFloat(row["SHD. SPEED"] || 0);
+                acc[art].mSpeedSum += parseFloat(row["Machine Speed"] || 0);
+                acc[art].mTpiSum += parseFloat(row["Machine TPI"] || 0);
+                acc[art].rows++;
+                return acc;
+            }, {});
+
+            tbody.innerHTML = "";
+            let grand = { count:[], actS:0, idolS:0, workS:0, sGrm:[], aGrm:[], sPrd:0, aPrd:0, gap:0, sSpd:[], mSpd:[], mTpi:[], util:[], pEff:[], sLos:[], uLos:[], iLos:[], tEff:[], artCount:0 };
+
+            for (const article in grouped) {
+                const data = grouped[article];
+                const avgCount = data.countSum / data.rows;
+                const avgShdGrm = data.shdGrmSum / data.rows;
+                const avgShdSpeed = data.shdSpeedSum / data.rows;
+                const avgMSpeed = data.mSpeedSum / data.rows;
+                const avgMTpi = data.mTpiSum / data.rows;
+                const shdProd = (avgShdGrm * data.actSpdl) / 1000;
+                const prodGap = shdProd - data.actProd;
+                const prdEffi = shdProd > 0 ? (data.actProd / shdProd) * 100 : 0;
+                const utiliLoss = data.availMinSum > 0 ? (data.detMinSum / data.availMinSum) * 100 : 0;
+                const utilization = 100 - utiliLoss;
+                const workSpindles = (data.actSpdl * utilization) / 100;
+                const speedLoss = avgShdSpeed > 0 ? ((avgShdSpeed - avgMSpeed) / avgShdSpeed) * 100 : 0;
+                const idolLoss = data.actSpdl > 0 ? (data.idolSpdl / data.actSpdl) * 100 : 0;
+                const actualGrms = workSpindles > 0 ? (data.actProd / workSpindles) * 1000 : 0;
+                let totalEffi = 0;
+                [prdEffi, speedLoss, utiliLoss, idolLoss].forEach(v => { if(v > 0) totalEffi += v; });
+
+                // Accumulate Grand Totals
+                grand.count.push(avgCount); grand.actS += data.actSpdl; grand.idolS += data.idolSpdl; 
+                grand.workS += workSpindles; grand.sGrm.push(avgShdGrm); grand.aGrm.push(actualGrms);
+                grand.sPrd += shdProd; grand.aPrd += data.actProd; grand.gap += prodGap;
+                grand.sSpd.push(avgShdSpeed); grand.mSpd.push(avgMSpeed); grand.mTpi.push(avgMTpi);
+                grand.util.push(utilization); grand.pEff.push(prdEffi); grand.sLos.push(speedLoss);
+                grand.uLos.push(utiliLoss); grand.iLos.push(idolLoss); grand.tEff.push(totalEffi);
+                grand.artCount++;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${article}</td><td>${avgCount.toFixed(2)}</td><td>${data.actSpdl.toFixed(0)}</td><td>${data.idolSpdl.toFixed(0)}</td><td>${workSpindles.toFixed(0)}</td><td>${avgShdGrm.toFixed(2)}</td><td>${actualGrms.toFixed(2)}</td><td>${shdProd.toFixed(2)}</td><td style="background:#e8f5e9;">${data.actProd.toFixed(2)}</td><td class="${prodGap <= 0 ? 'pos-val' : 'neg-val'}">${prodGap.toFixed(2)}</td><td>${avgShdSpeed.toFixed(0)}</td><td>${avgMSpeed.toFixed(0)}</td><td>${avgMTpi.toFixed(2)}</td><td>${utilization.toFixed(2)}%</td><td>${prdEffi.toFixed(2)}%</td><td>${speedLoss.toFixed(2)}%</td><td>${utiliLoss.toFixed(2)}%</td><td>${idolLoss.toFixed(2)}%</td><td style="font-weight:bold; background:#fff3e0;">${totalEffi.toFixed(2)}%</td>`;
+                tbody.appendChild(tr);
+            }
+
+            // Create Grand Total Row
+            const getAvg = (arr) => arr.length ? (arr.reduce((a,b)=>a+b,0) / arr.length).toFixed(2) : "0.00";
+            const tf = document.createElement('tr');
+            tf.className = "total-row";
+            tf.innerHTML = `
+                <td>GRAND TOTAL</td><td>${getAvg(grand.count)}</td><td>${grand.actS.toFixed(0)}</td><td>${grand.idolS.toFixed(0)}</td><td>${grand.workS.toFixed(0)}</td><td>${getAvg(grand.sGrm)}</td><td>${getAvg(grand.aGrm)}</td><td>${grand.sPrd.toFixed(2)}</td><td>${grand.aPrd.toFixed(2)}</td><td>${grand.gap.toFixed(2)}</td><td>${getAvg(grand.sSpd)}</td><td>${getAvg(grand.mSpd)}</td><td>${getAvg(grand.mTpi)}</td><td>${getAvg(grand.util)}%</td><td>${getAvg(grand.pEff)}%</td><td>${getAvg(grand.sLos)}%</td><td>${getAvg(grand.uLos)}%</td><td>${getAvg(grand.iLos)}%</td><td>${getAvg(grand.tEff)}%</td>
+            `;
+            tfoot.appendChild(tf);
+            picker.querySelectorAll('input').forEach(input => toggleCol(input.dataset.index));
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="19" style="color:red;">Error processing report.</td></tr>'; }
+    }
+</script>
+</body>
+</html>
