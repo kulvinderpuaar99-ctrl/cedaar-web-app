@@ -86,11 +86,12 @@
         .summary-header h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); }
 
         .date-group { display: flex; gap: 15px; align-items: center; }
-        .summary-date-picker { 
+        .summary-date-picker, .summary-select { 
             padding: 8px 12px; 
             border-radius: 6px; 
             border: 1px solid #dcdde1; 
             font-family: inherit;
+            background: white;
         }
 
         /* Modern Card Grid */
@@ -141,52 +142,21 @@
         th { background: #f8f9fa; color: #636e72; text-transform: uppercase; font-size: 12px; padding: 12px; text-align: left; border-bottom: 2px solid #eee; }
         td { padding: 15px; border-bottom: 1px solid #f1f2f6; }
 
-        /* PRINT STYLING - FIXING GRAND TOTAL POSITION */
         @media print {
             @page { margin: 1cm; }
             body * { visibility: hidden; }
             #detailModal, #detailModal *, #modalBody, #modalBody * { visibility: visible; }
-            #detailModal { 
-                position: absolute !important; 
-                left: 0 !important; 
-                top: 0 !important; 
-                width: 100% !important; 
-                height: auto !important; 
-                background: white !important; 
-                display: block !important; 
-            }
-            .modal-content { 
-                position: relative !important; 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                width: 100% !important; 
-                box-shadow: none !important; 
-            }
-            table { 
-                width: 100% !important; 
-                table-layout: fixed; 
-                word-wrap: break-word; 
-                border: 1px solid #000;
-            }
-            /* Ensures Footer (Grand Total) only appears at the end of the data */
-            tfoot { 
-                display: table-row-group !important; 
-            }
-            tfoot tr {
-                page-break-inside: avoid;
-            }
-            th, td { 
-                border: 1px solid #ddd !important; 
-                padding: 8px !important; 
-                font-size: 12px !important; 
-            }
+            #detailModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: auto !important; background: white !important; display: block !important; }
+            .modal-content { position: relative !important; margin: 0 !important; padding: 0 !important; width: 100% !important; box-shadow: none !important; }
+            table { width: 100% !important; table-layout: fixed; word-wrap: break-word; border: 1px solid #000; }
+            tfoot { display: table-row-group !important; }
+            tfoot tr { page-break-inside: avoid; }
+            th, td { border: 1px solid #ddd !important; padding: 8px !important; font-size: 12px !important; }
             .sidebar, .print-btn, .close, .nav-btn { display: none !important; }
         }
     </style>
 </head>
 <body>
-
-<div id="loginOverlay" style="display:none;"></div>
 
 <div id="detailModal" class="modal">
     <div class="modal-content">
@@ -229,6 +199,13 @@
             <div class="summary-header">
                 <h1>Production Overview</h1>
                 <div class="date-group">
+                    <label style="font-size: 0.8rem; font-weight: bold; color: #95a5a6;">SHIFT</label>
+                    <select id="shiftFilter" class="summary-select" onchange="fetchSummary()">
+                        <option value="ALL">All Shifts</option>
+                        <option value="A">Shift A</option>
+                        <option value="B">Shift B</option>
+                        <option value="C">Shift C</option>
+                    </select>
                     <label style="font-size: 0.8rem; font-weight: bold; color: #95a5a6;">FROM</label>
                     <input type="date" id="startDate" class="summary-date-picker" onchange="fetchSummary()">
                     <label style="font-size: 0.8rem; font-weight: bold; color: #95a5a6;">TO</label>
@@ -269,6 +246,7 @@
     async function fetchSummary() {
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
+        const selectedShift = document.getElementById('shiftFilter').value;
         const loader = document.getElementById('summaryLoading');
         if (!startDate || !endDate) return;
         
@@ -290,7 +268,11 @@
                         let sheetDateStr = `${dObj.getFullYear()}-${("0"+(dObj.getMonth()+1)).slice(-2)}-${("0"+dObj.getDate()).slice(-2)}`;
                         if (sheetDateStr === "NaN-aN-aN") sheetDateStr = String(row.Date).substring(0,10);
 
-                        if (sheetDateStr >= startDate && sheetDateStr <= endDate) {
+                        // Match Shift
+                        const rowShift = String(row["Production Shift"] || "").toUpperCase().trim();
+                        const shiftMatches = (selectedShift === "ALL" || rowShift === selectedShift);
+
+                        if (sheetDateStr >= startDate && sheetDateStr <= endDate && shiftMatches) {
                             const val = parseFloat(row["Actual Production"] || row["Total Net WT"] || row["Net WT"] || 0);
                             if (!isNaN(val)) total += val;
                         }
@@ -306,11 +288,12 @@
     function showDetails(dept) {
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
+        const selectedShift = document.getElementById('shiftFilter').value;
         const data = rawDataCache[dept] || [];
         const tableBody = document.getElementById('detailTableBody');
         const grandTotalEl = document.getElementById('grandTotalKg');
         
-        document.getElementById('modalTitle').innerText = `${dept} Details`;
+        document.getElementById('modalTitle').innerText = `${dept} Details ${selectedShift !== 'ALL' ? '('+selectedShift+')' : ''}`;
         tableBody.innerHTML = "";
         let groupedData = {};
         let grandTotal = 0;
@@ -319,7 +302,11 @@
             if (!row.Date) return;
             let dObj = new Date(row.Date);
             let sheetDateStr = `${dObj.getFullYear()}-${("0"+(dObj.getMonth()+1)).slice(-2)}-${("0"+dObj.getDate()).slice(-2)}`;
-            if (sheetDateStr >= startDate && sheetDateStr <= endDate) {
+            
+            const rowShift = String(row["Production Shift"] || "").toUpperCase().trim();
+            const shiftMatches = (selectedShift === "ALL" || rowShift === selectedShift);
+
+            if (sheetDateStr >= startDate && sheetDateStr <= endDate && shiftMatches) {
                 const article = row["Article"] || row["Description"] || row["Yarn Description"] || "Unknown";
                 const kg = parseFloat(row["Actual Production"] || row["Total Net WT"] || row["Net WT"] || 0);
                 if (!isNaN(kg)) {
