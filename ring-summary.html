@@ -23,7 +23,6 @@
 
         #mainAppWrapper { display: flex; height: 100vh; }
 
-        /* Sidebar Customization */
         .sidebar { 
             width: 260px; 
             background: var(--sidebar-bg); 
@@ -45,13 +44,12 @@
             text-align: left; 
             font-weight: 600;
             transition: 0.3s;
-            text-decoration: none; /* Added for link support */
-            display: block; /* Added for link support */
+            text-decoration: none; 
+            display: block; 
         }
 
         .nav-btn:hover { background: var(--accent-color); border-color: var(--accent-color); color: white; }
 
-        /* Dashboard Container */
         #contentArea { flex: 1; overflow-y: auto; padding: 25px; }
 
         .container { 
@@ -61,9 +59,8 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
         }
 
-        h2 { color: var(--accent-color); margin-top: 0; letter-spacing: 1px; }
+        h2, h3 { color: var(--accent-color); margin-top: 0; letter-spacing: 1px; }
 
-        /* Controls Section */
         .header-controls { 
             display: flex; 
             gap: 12px; 
@@ -86,13 +83,11 @@
             border-radius: 4px;
         }
 
-        /* Buttons */
         .btn-fetch { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-export { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;}
         .btn-pdf { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;}
         .btn-toggle { background: #5d6d7e; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 11px; }
 
-        /* Table Styling */
         .table-container { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid var(--border-muted); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; background: #24262d; }
         th { background: var(--table-header); color: var(--accent-color); padding: 12px 5px; border: 1px solid var(--border-muted); text-transform: uppercase; font-size: 10px; }
@@ -107,10 +102,9 @@
 
         .column-picker { background: #2d313a; padding: 15px; border: 1px solid var(--border-muted); border-radius: 8px; margin-bottom: 15px; display: none; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 
-        /* Print Media Settings - FIXED FOR FITTING DATA */
         @media print {
             @page { size: landscape; margin: 5mm; }
-            body { background: white; color: black; zoom: 70%; } /* Shrinks content to fit */
+            body { background: white; color: black; zoom: 70%; }
             .sidebar, .header-controls, .btn-toggle, .column-picker { display: none !important; }
             #contentArea { padding: 0; width: 100%; }
             #mainAppWrapper { display: block; }
@@ -173,6 +167,22 @@
                     <tfoot id="summaryTableFoot"></tfoot>
                 </table>
             </div>
+
+            <div class="table-container" style="margin-top: 30px; max-width: 500px;">
+                <h3>Detention Report</h3>
+                <table id="detentionTable">
+                    <thead>
+                        <tr>
+                            <th>Detention Type</th>
+                            <th>Detention Minutes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detentionTableBody">
+                        <tr><td colspan="2">No detention data.</td></tr>
+                    </tbody>
+                    <tfoot id="detentionTableFoot"></tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -229,10 +239,14 @@
         const reportShift = document.getElementById('reportShift').value;
         const tbody = document.getElementById('summaryTableBody');
         const tfoot = document.getElementById('summaryTableFoot');
+        const detTbody = document.getElementById('detentionTableBody');
+        const detTfoot = document.getElementById('detentionTableFoot');
         
         if (!reportDate) return alert("Select a date.");
         tbody.innerHTML = '<tr><td colspan="19">Fetching production data...</td></tr>';
+        detTbody.innerHTML = '<tr><td colspan="2">Processing...</td></tr>';
         tfoot.innerHTML = "";
+        detTfoot.innerHTML = "";
 
         try {
             const response = await fetch(`${API_URL}?Department=RING`); 
@@ -250,10 +264,31 @@
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="19">No entries found for this date.</td></tr>';
+                detTbody.innerHTML = '<tr><td colspan="2">No data found.</td></tr>';
                 return;
             }
 
+            // --- DETENTION DATA PARSING ---
+            const detentionSummary = {};
+            let grandTotalDetention = 0;
+
             const grouped = filtered.reduce((acc, row) => {
+                // Parse the Detention Type string
+                const rawDetention = row["Detention Type"] || "";
+                if (rawDetention) {
+                    const entries = rawDetention.split(',');
+                    entries.forEach(entry => {
+                        // Regex matches "Text Content" and "Number" inside brackets
+                        const match = entry.match(/(.*?)\((.*?)\)/);
+                        if (match) {
+                            const type = match[1].trim();
+                            const mins = parseFloat(match[2]) || 0;
+                            detentionSummary[type] = (detentionSummary[type] || 0) + mins;
+                            grandTotalDetention += mins;
+                        }
+                    });
+                }
+
                 const art = row.Article || "Unknown";
                 if (!acc[art]) {
                     acc[art] = { countSum: 0, actSpdl: 0, idolSpdl: 0, actProd: 0, shdGrmSum: 0, shdSpeedSum: 0, mSpeedSum: 0, mTpiSum: 0, detMinSum: 0, availMinSum: 0, rows: 0 };
@@ -314,6 +349,23 @@
                 <td>GRAND TOTAL</td><td>${getAvg(grand.count)}</td><td>${grand.actS.toFixed(0)}</td><td>${grand.idolS.toFixed(0)}</td><td>${grand.workS.toFixed(0)}</td><td>${getAvg(grand.sGrm)}</td><td>${getAvg(grand.aGrm)}</td><td>${grand.sPrd.toFixed(2)}</td><td>${grand.aPrd.toFixed(2)}</td><td>${grand.gap.toFixed(2)}</td><td>${getAvg(grand.sSpd)}</td><td>${getAvg(grand.mSpd)}</td><td>${getAvg(grand.mTpi)}</td><td>${getAvg(grand.util)}%</td><td>${getAvg(grand.pEff)}%</td><td>${getAvg(grand.sLos)}%</td><td>${getAvg(grand.uLos)}%</td><td>${getAvg(grand.iLos)}%</td><td>${getAvg(grand.tEff)}%</td>
             `;
             tfoot.appendChild(tf);
+
+            // --- RENDER DETENTION REPORT ---
+            detTbody.innerHTML = "";
+            for (const type in detentionSummary) {
+                const dTr = document.createElement('tr');
+                dTr.innerHTML = `<td>${type}</td><td>${detentionSummary[type].toFixed(0)}</td>`;
+                detTbody.appendChild(dTr);
+            }
+            if (Object.keys(detentionSummary).length === 0) {
+                detTbody.innerHTML = '<tr><td colspan="2">No detention records for this date.</td></tr>';
+            } else {
+                const detTf = document.createElement('tr');
+                detTf.className = "total-row";
+                detTf.innerHTML = `<td>TOTAL MINUTES</td><td>${grandTotalDetention.toFixed(0)}</td>`;
+                detTfoot.appendChild(detTf);
+            }
+
             picker.querySelectorAll('input').forEach(input => toggleCol(input.dataset.index));
         } catch (e) { tbody.innerHTML = '<tr><td colspan="19" style="color:red;">Error connecting to CEDAAR database.</td></tr>'; }
     }
