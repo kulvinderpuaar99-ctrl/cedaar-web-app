@@ -84,12 +84,14 @@
             flex-direction: column;
             padding: 1.5rem;
             z-index: 100;
+            height: 100vh; /* Fixed height to enable internal scrolling */
         }
 
         .brand-section {
             padding-bottom: 2rem;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 1.5rem;
+            flex-shrink: 0;
         }
 
         .brand-section h1 {
@@ -105,6 +107,17 @@
             flex-direction: column;
             gap: 0.5rem;
             flex-grow: 1;
+            overflow-y: auto; /* Enables scrolling if links are many */
+            padding-right: 5px;
+        }
+
+        /* Scrollbar Styling for Sidebar */
+        .menu-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .menu-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
         }
 
         .nav-item {
@@ -117,6 +130,7 @@
             border-radius: 10px;
             transition: 0.2s;
             font-size: 0.95rem;
+            flex-shrink: 0;
         }
 
         .nav-item:hover {
@@ -127,6 +141,8 @@
         .user-footer {
             padding-top: 1rem;
             border-top: 1px solid var(--border-color);
+            flex-shrink: 0; /* Prevents footer from being pushed out */
+            margin-top: 1rem;
         }
 
         .btn-logout {
@@ -138,6 +154,11 @@
             border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
         }
 
         /* --- Main Workspace --- */
@@ -148,6 +169,7 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            overflow-y: auto;
         }
 
         .central-logo {
@@ -178,8 +200,16 @@
         }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                border-right: none; 
+                border-bottom: 1px solid var(--border-color);
+                position: relative;
+            }
+            .menu-list { max-height: 250px; }
+            .workspace { height: 60vh; }
         }
     </style>
 </head>
