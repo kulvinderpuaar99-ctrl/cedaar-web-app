@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #productionSummaryApp { display: block; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; min-height: 100vh; }
+        #saleOrderApp, #fiberIssueApp { display: none; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #2196f3; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        .header-controls { display: flex; gap: 15px; padding: 12px; border-radius: 8px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .control-field { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        .btn-fetch { background: #1565c0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; height: 32px; transition: 0.3s; }
+        .btn-print { background: #607d8b; }
+        .btn-download { background: #f57c00; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
+        th { background: #2980b9; color: white; padding: 8px; text-align: center; }
+        td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
+        input { width: 95%; padding: 6px; border: 1px solid #ced4da; border-radius: 3px; font-size: 12px; }
+        .so-list-area { margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
+        .nav-link { color: #ffffff; text-decoration: none; margin: 0 15px; font-weight: 500; font-size: 16px; transition: color 0.3s; }
+        
+        @media print {
+            .nav-link, .header-controls, .btn-fetch { display: none !important; }
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body onload="loadProductionSummary()"> 
+<nav style="background-color: #000000; padding: 15px 0; text-align: left; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+  <a href="index.html" class="nav-link">Return Home🏠</a>
+</nav>
+
+<div id="productionSummaryApp">
+    <div class="container">
+        <h2>Daily Production Summary</h2>
+        <div class="header-controls" style="background:#e8f5e9; border: 1px solid #4caf50;">
+            <div class="control-field">
+                <label>From Date</label>
+                <input type="date" id="fromDate" onchange="filterProductionTable()">
+            </div>
+            <div class="control-field">
+                <label>To Date</label>
+                <input type="date" id="toDate" onchange="filterProductionTable()">
+            </div>
+            <div class="control-field">
+                <label>Search</label>
+                <input type="text" id="prodSearchInput" placeholder="Search..." onkeyup="filterProductionTable()" style="width:150px;">
+            </div>
+            <button class="btn-fetch" onclick="loadProductionSummary()" style="background:#4caf50">🔄 REFRESH</button>
+            <button class="btn-fetch btn-print" onclick="printData()">🖨️ PRINT</button>
+            <button class="btn-fetch btn-download" onclick="downloadCSV()">📥 DOWNLOAD CSV</button>
+        </div>
+        <div class="so-list-area">
+            <div style="overflow-x: auto;">
+                <table class="so-table" id="productionTable">
+                    <thead>
+                        <tr style="background: #2e7d32;">
+                            <th>Date</th>
+                            <th>Mixing</th>
+                            <th>Carding</th>
+                            <th>Drawframe</th>
+                            <th>Simplex</th>
+                            <th>Ring</th>
+                            <th>Autoconer</th>
+                            <th>TFO</th>
+                            <th>Packing</th>
+                            <th style="background:#1565c0;">Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prodSummaryBody">
+                        <tr><td colspan="10">Fetching departmental data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+
+    function formatDate(dateVal) {
+        if (!dateVal) return "N/A";
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return dateVal;
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    async function loadProductionSummary() {
+        const tbody = document.getElementById('prodSummaryBody');
+        tbody.innerHTML = "<tr><td colspan='10'>Calculating daily totals...</td></tr>";
+        
+        try {
+            const depts = ["MIXING", "CARDING", "DRAWFRAME", "SIMPLEX", "RING", "AUTOCONER", "TFO", "PACKING", "SALE"];
+            const results = await Promise.all(depts.map(dept => 
+                fetch(`${API_URL}?Department=${dept}`).then(res => res.json())
+            ));
+
+            const dailyTotals = {};
+
+            depts.forEach((deptName, index) => {
+                const data = results[index] || [];
+                const header = ["PACKING", "SALE"].includes(deptName) ? "Total Net WT" : "Actual Production";
+                
+                data.forEach(row => {
+                    const rawDate = row["Date"];
+                    if (!rawDate) return;
+                    
+                    const dateKey = formatDate(rawDate);
+                    
+                    if (!dailyTotals[dateKey]) {
+                        dailyTotals[dateKey] = { MIXING:0, CARDING:0, DRAWFRAME:0, SIMPLEX:0, RING:0, AUTOCONER:0, TFO:0, PACKING:0, SALE:0 };
+                    }
+                    
+                    dailyTotals[dateKey][deptName] += (parseFloat(row[header]) || 0);
+                });
+            });
+
+            const sortedDates = Object.keys(dailyTotals).sort((a, b) => new Date(b) - new Date(a));
+            
+            if(sortedDates.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='10'>No production data found.</td></tr>";
+                return;
+            }
+
+            tbody.innerHTML = "";
+            sortedDates.forEach(date => {
+                const vals = dailyTotals[date];
+                tbody.innerHTML += `<tr>
+                    <td style="font-weight:bold; background:#f8f9fa;">${date}</td>
+                    <td>${vals.MIXING.toFixed(2)}</td>
+                    <td>${vals.CARDING.toFixed(2)}</td>
+                    <td>${vals.DRAWFRAME.toFixed(2)}</td>
+                    <td>${vals.SIMPLEX.toFixed(2)}</td>
+                    <td>${vals.RING.toFixed(2)}</td>
+                    <td>${vals.AUTOCONER.toFixed(2)}</td>
+                    <td>${vals.TFO.toFixed(2)}</td>
+                    <td>${vals.PACKING.toFixed(2)}</td>
+                    <td style="background:#e3f2fd; font-weight:bold">${vals.SALE.toFixed(2)}</td>
+                </tr>`;
+            });
+            filterProductionTable(); // Apply filters if dates were already selected
+        } catch (e) { 
+            console.error(e);
+            tbody.innerHTML = "<tr><td colspan='10'>Error loading departmental data.</td></tr>"; 
+        }
+    }
+
+    function filterProductionTable() {
+        const searchInput = document.getElementById("prodSearchInput").value.toUpperCase();
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+        const tr = document.getElementById("prodSummaryBody").getElementsByTagName("tr");
+
+        for (let i = 0; i < tr.length; i++) {
+            const dateCell = tr[i].getElementsByTagName("td")[0];
+            if (!dateCell) continue;
+            
+            const rowDate = dateCell.textContent;
+            const textMatch = tr[i].textContent.toUpperCase().includes(searchInput);
+            
+            let dateMatch = true;
+            if (fromDate && rowDate < fromDate) dateMatch = false;
+            if (toDate && rowDate > toDate) dateMatch = false;
+
+            tr[i].style.display = (textMatch && dateMatch) ? "" : "none";
+        }
+    }
+
+    function printData() {
+        const from = document.getElementById("fromDate").value || "Start";
+        const to = document.getElementById("toDate").value || "End";
+        
+        let printContents = `<h2>Production Summary (${from} to ${to})</h2>`;
+        printContents += `<table border="1" style="border-collapse:collapse; width:100%; text-align:center; font-family:sans-serif; font-size:12px;">`;
+        printContents += document.getElementById("productionTable").innerHTML;
+        printContents += `</table>`;
+
+        const originalBody = document.body.innerHTML;
+        const printWindow = window.open('', '', 'height=600,width=900');
+        
+        printWindow.document.write('<html><head><title>Print Summary</title>');
+        printWindow.document.write('<style>tr[style*="display: none"] { display: none !important; } th { background:#2980b9; color:white; padding:8px; } td { padding:8px; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(printContents);
+        printWindow.document.write('</body></html>');
+        
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    function downloadCSV() {
+        let csv = [];
+        const rows = document.querySelectorAll("#productionTable tr");
+        
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].style.display === "none") continue;
+            
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length; j++) {
+                row.push('"' + cols[j].innerText + '"');
+            }
+            csv.push(row.join(","));
+        }
+
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `Production_Summary_${new Date().toISOString().slice(0,10)}.csv`;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+</script>
+</body>
+</html>
