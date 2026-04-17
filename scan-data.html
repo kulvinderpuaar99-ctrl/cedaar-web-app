@@ -269,12 +269,18 @@
         }
     }
 
-    // New Function to Print the filtered Packing List
     function printPackingList() {
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
         const lotFilter = document.getElementById('lotInput').value.trim().toLowerCase();
         const countFilter = document.getElementById('countInput').value.trim().toLowerCase();
+        
+        // Formatted Current Date for the print header: DD/MM/YYYY
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const formattedPrintDate = `${dd}/${mm}/${yyyy}`;
         
         let printHTML = `
             <!DOCTYPE html>
@@ -286,7 +292,8 @@
                     .header { text-align: center; margin-bottom: 20px; }
                     .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
                     .header h2 { margin: 5px 0 0 0; font-size: 18px; font-weight: normal; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    .print-date { font-size: 14px; margin-top: 8px; font-weight: 500; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
                     th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
                     th { background-color: #f2f2f2; text-transform: uppercase; }
                     .text-right { text-align: right; }
@@ -301,12 +308,14 @@
             <body>
                 <div class="header">
                     <h1>CEDAAR TEXTILE LIMITED</h1>
-                    <h2>Packing List</h2>
+		<h2>Village : Akbarpur, Ahmedgarh, District - Sangrur, Punjab 148021, Ludhiana</h2>
+                    <h3>Packing List</h3>
+                    <div class="print-date"><strong>Date:</strong> ${formattedPrintDate}</div>
                 </div>
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-center">Sr. No.</th>
+                            <th class="text-center">Sr. No.</th>a
                             <th>PO ID</th>
                             <th class="text-center">Cones</th>
                             <th>PC Code</th>
@@ -323,9 +332,8 @@
         let grandNetTotal = 0;
         let grandGrossTotal = 0;
         let displayRowIndex = 1;
-        const seenRefs = new Set(); // Reset Set for the print loop
+        const seenRefs = new Set();
 
-        // Loop through cached data using the exact same filters as renderReport
         cachedData.forEach(row => {
             const rowValues = Object.values(row);
 
@@ -377,7 +385,6 @@
             }
         });
 
-        // Add Totals row and close HTML
         printHTML += `
                     </tbody>
                     <tfoot>
@@ -392,7 +399,6 @@
             </html>
         `;
 
-        // Open a new window and print
         const printWindow = window.open('', '_blank', 'height=600,width=800');
         printWindow.document.open();
         printWindow.document.write(printHTML);
@@ -400,7 +406,6 @@
         
         printWindow.focus();
         
-        // Slight delay ensures styles map correctly before print dialog opens
         setTimeout(() => {
             printWindow.print();
             printWindow.close();
