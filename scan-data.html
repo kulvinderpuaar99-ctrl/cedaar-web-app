@@ -203,7 +203,7 @@
         let grandNetTotal = 0;
         let grandGrossTotal = 0;
         const seenRefs = new Set();
-        let displayRowIndex = 1; 
+        const lotSerialTracker = {};
 
         cachedData.forEach(row => {
             const rowValues = Object.values(row);
@@ -222,6 +222,13 @@
 
             if (colD && seenRefs.has(colD)) return;
             if (colD) seenRefs.add(colD);
+
+            // Increment the serial count for this specific Lot No (colE)
+            if (!lotSerialTracker[colE]) {
+                lotSerialTracker[colE] = 1;
+            } else {
+                lotSerialTracker[colE]++;
+            }
 
             let datePart = "";
             let timePart = "";
@@ -245,7 +252,7 @@
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="font-weight: bold; color: #7f8c8d;">${displayRowIndex++}</td>
+                    <td style="font-weight: bold; color: #7f8c8d;">${lotSerialTracker[colE]}</td>
                     <td>${datePart}</td>
                     <td style="color: #7f8c8d;">${timePart}</td>
                     <td>${colA}</td> 
@@ -275,7 +282,6 @@
         const lotFilter = document.getElementById('lotInput').value.trim().toLowerCase();
         const countFilter = document.getElementById('countInput').value.trim().toLowerCase();
         
-        // Formatted Current Date for the print header: DD/MM/YYYY
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -308,7 +314,7 @@
             <body>
                 <div class="header">
                     <h1>CEDAAR TEXTILE LIMITED</h1>
-		<h2>Village : Akbarpur, Ahmedgarh, District - Sangrur, Punjab 148021, Ludhiana</h2>
+		            <h2>Village : Akbarpur, Ahmedgarh, District - Sangrur, Punjab 148021, Ludhiana</h2>
                     <h3>Packing List</h3>
                     <div class="print-date"><strong>Date:</strong> ${formattedPrintDate}</div>
                 </div>
@@ -331,8 +337,8 @@
 
         let grandNetTotal = 0;
         let grandGrossTotal = 0;
-        let displayRowIndex = 1;
         const seenRefs = new Set();
+        const lotSerialTracker = {};
 
         cachedData.forEach(row => {
             const rowValues = Object.values(row);
@@ -351,6 +357,12 @@
 
             if (colD && seenRefs.has(colD)) return;
             if (colD) seenRefs.add(colD);
+
+            if (!lotSerialTracker[colE]) {
+                lotSerialTracker[colE] = 1;
+            } else {
+                lotSerialTracker[colE]++;
+            }
 
             let datePart = "";
             if (colI.includes('T')) {
@@ -371,7 +383,7 @@
 
                 printHTML += `
                     <tr>
-                        <td class="text-center">${displayRowIndex++}</td>
+                        <td class="text-center">${lotSerialTracker[colE]}</td>
                         <td>${colA}</td> 
                         <td class="text-center">${colB}</td>
                         <td>${colC}</td>
