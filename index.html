@@ -244,6 +244,7 @@
             <a href="production-tracking.html" class="nav-item" id="card-tracking"><span>📋</span> Sale Order Track</a>
             <a href="production-tracking-date.html" class="nav-item" id="card-track"><span>📋</span> Production Track Date Wise</a>
             <a href="raw-material.html" class="nav-item" id="card-raw"><span>📦</span> Raw Material</a>
+            <a href="scan-data.html" class="nav-item" id="card-scan"><span>📦</span> Scan Data Packing</a>
             <a href="report-download.html" class="nav-item" id="card-download"><span>📦</span> Report Spinning Download</a>
             <a href="report-download-sale-fiber.html" class="nav-item" id="card-downloadsale"><span>📦</span> Report Sale & Fiber Download</a>
         </nav>
@@ -275,10 +276,11 @@
             "jpsingh": { pass: "123", access: ["card-spinning", "card-summary","card-tracking","card-download","card-ring"] },
             "pawan": { pass: "pawan123", access: ["card-spinning", "card-summary","card-download"] },
             "rajrm": { pass: "raj@123", access: ["card-raw"] },
-            "sale": { pass: "sale@123", access: ["card-sale","card-tracking","card-spinning","card-stock","card-downloadsale"] },
+            "sale1": { pass: "123", access: ["card-scan"] },
+            "sale": { pass: "sale@123", access: ["card-sale","card-tracking","card-spinning","card-stock","card-downloadsale","card-scan"] },
             "mdc": { pass: "mdc@123", access: ["card-sales","card-tracking","card-downloadsale"] },
-            "admin": { pass: "Kp@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track", "card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
-            "mis": { pass: "123", access: [ "card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track", "card-sales","card-ring", "card-raw","card-download","card-downloadsale"] }
+            "admin": { pass: "Kp@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
+            "mis": { pass: "123", access: [ "card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] }
         };
 
         function handleLogin() {
