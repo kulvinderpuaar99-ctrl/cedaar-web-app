@@ -101,6 +101,32 @@
         .total-value { text-align: right; padding: 20px 10px; color: var(--accent-orange); font-size: 1.2rem; }
 
         #summaryLoading { color: var(--accent-orange); font-weight: 600; margin-bottom: 10px; display: none; }
+
+        /* Modal Styles for Summary */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+        .close-btn {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +135,8 @@
     <div class="sidebar">
         <h2>CEDAAR TEXTILE LIMITED</h2>
         <button class="nav-btn" onclick="fetchScanData()">🔄 Refresh Data</button>
+        <button class="nav-btn" onclick="showLotSummary()" style="background: #3498db; color: white;">📋 Total Lot Summary</button>
+        <button class="nav-btn" onclick="downloadExcel()" style="background: #27ae60; color: white; border-color: #27ae60;">📊 Download Excel</button>
         <button class="nav-btn" onclick="printPackingList()" style="background: var(--accent-orange); color: white; border-color: var(--accent-orange);">🖨️ Generate Packing List</button>
         <a href="index.html" class="nav-btn">🏠 Return to Home</a>
     </div>
@@ -158,6 +186,25 @@
                 </tfoot>
             </table>
         </div>
+    </div>
+</div>
+
+<div id="summaryModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Total Lot Summary</h2>
+        <table id="lotSummaryTable">
+            <thead>
+                <tr>
+                    <th>Lot No.</th>
+                    <th>Total Boxes</th>
+                    <th>Total Cones</th>
+                    <th>Total Gross Wt</th>
+                    <th>Total Net Wt</th>
+                </tr>
+            </thead>
+            <tbody id="lotSummaryBody"></tbody>
+        </table>
     </div>
 </div>
 
@@ -223,7 +270,6 @@
             if (colD && seenRefs.has(colD)) return;
             if (colD) seenRefs.add(colD);
 
-            // Increment the serial count for this specific Lot No (colE)
             if (!lotSerialTracker[colE]) {
                 lotSerialTracker[colE] = 1;
             } else {
@@ -270,11 +316,59 @@
 
         netTotalEl.innerText = grandNetTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
         grossTotalEl.innerText = grandGrossTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
-
-        if (grandNetTotal === 0) {
-            tableBody.innerHTML = `<tr><td colspan='11' style='text-align:center; padding: 20px; color:#7f8c8d;'>No records found for these filters.</td></tr>`;
-        }
     }
+
+    function showLotSummary() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const lotFilter = document.getElementById('lotInput').value.trim().toLowerCase();
+        const countFilter = document.getElementById('countInput').value.trim().toLowerCase();
+
+        const summary = {};
+        const seenRefs = new Set();
+
+        cachedData.forEach(row => {
+            const rowValues = Object.values(row);
+            const colB = parseFloat(rowValues[1] || 0);
+            const colC = String(rowValues[2] || '').trim();
+            const colD = String(rowValues[3] || '').trim();
+            const colE = String(rowValues[4] || '').trim();
+            const colF = parseFloat(rowValues[5] || 0);
+            const colG = parseFloat(rowValues[6] || 0);
+            const colI = String(rowValues[8] || "");
+
+            if (!colI || (colD && seenRefs.has(colD))) return;
+            seenRefs.add(colD);
+
+            let datePart = colI.includes('T') ? colI.split('T')[0] : colI.split(' ')[0];
+
+            if (datePart >= start && datePart <= end && (lotFilter === "" || colC.toLowerCase().includes(lotFilter)) && (countFilter === "" || colE.toLowerCase().includes(countFilter))) {
+                if (!summary[colE]) {
+                    summary[colE] = { boxes: 0, cones: 0, gross: 0, net: 0 };
+                }
+                summary[colE].boxes++;
+                summary[colE].cones += colB;
+                summary[colE].gross += colG;
+                summary[colE].net += colF;
+            }
+        });
+
+        const body = document.getElementById('lotSummaryBody');
+        body.innerHTML = "";
+        for (const lot in summary) {
+            body.innerHTML += `
+                <tr>
+                    <td>${lot}</td>
+                    <td>${summary[lot].boxes}</td>
+                    <td>${summary[lot].cones}</td>
+                    <td>${summary[lot].gross.toFixed(2)}</td>
+                    <td>${summary[lot].net.toFixed(2)}</td>
+                </tr>`;
+        }
+        document.getElementById('summaryModal').style.display = "block";
+    }
+
+    function closeModal() { document.getElementById('summaryModal').style.display = "none"; }
 
     function printPackingList() {
         const start = document.getElementById('startDate').value;
@@ -286,6 +380,7 @@
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yyyy = now.getFullYear();
+        // Restored date format
         const formattedPrintDate = `${dd}/${mm}/${yyyy}`;
         
         let printHTML = `
@@ -305,10 +400,6 @@
                     .text-right { text-align: right; }
                     .text-center { text-align: center; }
                     .total-row td { font-weight: bold; font-size: 14px; border-top: 2px solid #000; }
-                    @media print {
-                        body { padding: 0; }
-                        @page { margin: 1cm; }
-                    }
                 </style>
             </head>
             <body>
@@ -342,7 +433,6 @@
 
         cachedData.forEach(row => {
             const rowValues = Object.values(row);
-
             const colA = rowValues[0] || '';                
             const colB = rowValues[1] || '';                
             const colC = String(rowValues[2] || '').trim(); 
@@ -353,34 +443,17 @@
             const colH = rowValues[7] || '';                
             const colI = String(rowValues[8] || "");        
             
-            if (!colI) return;
+            if (!colI || (colD && seenRefs.has(colD))) return;
+            seenRefs.add(colD);
 
-            if (colD && seenRefs.has(colD)) return;
-            if (colD) seenRefs.add(colD);
+            if (!lotSerialTracker[colE]) lotSerialTracker[colE] = 1;
+            else lotSerialTracker[colE]++;
 
-            if (!lotSerialTracker[colE]) {
-                lotSerialTracker[colE] = 1;
-            } else {
-                lotSerialTracker[colE]++;
-            }
+            let datePart = colI.includes('T') ? colI.split('T')[0] : colI.split(' ')[0];
 
-            let datePart = "";
-            if (colI.includes('T')) {
-                const dObj = new Date(colI);
-                datePart = `${dObj.getFullYear()}-${("0"+(dObj.getMonth()+1)).slice(-2)}-${("0"+dObj.getDate()).slice(-2)}`;
-            } else {
-                const parts = colI.split(' ');
-                datePart = parts[0]; 
-            }
-
-            const dateMatch = (datePart >= start && datePart <= end);
-            const lotMatch = (lotFilter === "" || colC.toLowerCase().includes(lotFilter));
-            const countMatch = (countFilter === "" || colE.toLowerCase().includes(countFilter));
-
-            if (dateMatch && lotMatch && countMatch) {
+            if (datePart >= start && datePart <= end && (lotFilter === "" || colC.toLowerCase().includes(lotFilter)) && (countFilter === "" || colE.toLowerCase().includes(countFilter))) {
                 grandNetTotal += colF;
                 grandGrossTotal += colG;
-
                 printHTML += `
                     <tr>
                         <td class="text-center">${lotSerialTracker[colE]}</td>
@@ -392,36 +465,71 @@
                         <td>${colH}</td>
                         <td class="text-right">${colG.toFixed(2)}</td>
                         <td class="text-right">${colF.toFixed(2)}</td>
-                    </tr>
-                `;
+                    </tr>`;
             }
         });
 
+        // Fixed Grand Total placement
         printHTML += `
-                    </tbody>
-                    <tfoot>
                         <tr class="total-row">
                             <td colspan="7" class="text-right">GRAND TOTALS:</td>
                             <td class="text-right">${grandGrossTotal.toFixed(2)}</td>
                             <td class="text-right">${grandNetTotal.toFixed(2)}</td>
                         </tr>
-                    </tfoot>
+                    </tbody>
                 </table>
             </body>
             </html>
         `;
 
-        const printWindow = window.open('', '_blank', 'height=600,width=800');
-        printWindow.document.open();
+        const printWindow = window.open('', '_blank');
         printWindow.document.write(printHTML);
         printWindow.document.close();
+        setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+    }
+
+    function downloadExcel() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const lotFilter = document.getElementById('lotInput').value.trim().toLowerCase();
+        const countFilter = document.getElementById('countInput').value.trim().toLowerCase();
         
-        printWindow.focus();
-        
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 250);
+        let csvContent = "data:text/csv;charset=utf-8,SR. NO.,Date,Time,PO ID,Cones,PC Code,Ref No,Lot No.,Shade,Gross Wt,Net Wt\n";
+        const seenRefs = new Set();
+        const lotSerialTracker = {};
+
+        cachedData.forEach(row => {
+            const rowValues = Object.values(row);
+            const colA = rowValues[0] || '';                
+            const colB = rowValues[1] || '';                
+            const colC = String(rowValues[2] || '').trim(); 
+            const colD = String(rowValues[3] || '').trim(); 
+            const colE = String(rowValues[4] || '').trim(); 
+            const colF = parseFloat(rowValues[5] || 0);     
+            const colG = parseFloat(rowValues[6] || 0);     
+            const colH = rowValues[7] || '';                
+            const colI = String(rowValues[8] || "");        
+            
+            if (!colI || (colD && seenRefs.has(colD))) return;
+            seenRefs.add(colD);
+
+            if (!lotSerialTracker[colE]) lotSerialTracker[colE] = 1;
+            else lotSerialTracker[colE]++;
+
+            let datePart = colI.includes('T') ? colI.split('T')[0] : colI.split(' ')[0];
+            let timePart = colI.includes('T') ? new Date(colI).toTimeString().split(' ')[0] : (colI.split(' ')[1] || "");
+
+            if (datePart >= start && datePart <= end && (lotFilter === "" || colC.toLowerCase().includes(lotFilter)) && (countFilter === "" || colE.toLowerCase().includes(countFilter))) {
+                csvContent += [lotSerialTracker[colE], datePart, timePart, `"${colA}"`, colB, `"${colC}"`, `"${colD}"`, `"${colE}"`, `"${colH}"`, colG.toFixed(2), colF.toFixed(2)].join(",") + "\n";
+            }
+        });
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `Production_Log_${start}_to_${end}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 </body>
