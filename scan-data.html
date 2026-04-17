@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Production Log</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f6;
+            --sidebar-bg: #1a252f;
+            --accent-orange: #e67e22;
+            --text-main: #2c3e50;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body { 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+        }
+
+        #dashboard { display: flex; height: 100vh; }
+        
+        .sidebar { 
+            width: 260px; 
+            background: var(--sidebar-bg); 
+            color: white; 
+            padding: 30px 20px; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 { 
+            font-size: 1.1rem; 
+            letter-spacing: 1px; 
+            margin-bottom: 30px; 
+            border-left: 4px solid var(--accent-orange);
+            padding-left: 10px;
+            line-height: 1.4;
+        }
+
+        .nav-btn { 
+            background: rgba(255,255,255,0.05); 
+            color: #ffffff; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 12px 15px; 
+            margin-bottom: 10px; 
+            border-radius: 6px; 
+            text-align: left; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 14px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .nav-btn:hover { background: var(--accent-orange); transform: translateX(5px); }
+
+        .summary-container { flex: 1; padding: 30px 40px; overflow-y: auto; }
+
+        .summary-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .summary-header h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); }
+
+        .date-group { display: flex; gap: 10px; align-items: center; font-weight: bold; font-size: 13px; }
+        .summary-date-picker { padding: 8px 10px; border-radius: 6px; border: 1px solid #dcdde1; font-family: inherit; }
+        
+        .search-input { border: 2px solid var(--accent-orange); width: 100px; }
+
+        .section-title { margin: 30px 0 15px 0; font-size: 1.1rem; color: var(--sidebar-bg); border-bottom: 2px solid var(--accent-orange); display: inline-block; padding-bottom: 5px; }
+
+        .report-card { 
+            background: var(--card-bg); 
+            padding: 0; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8f9fa; color: #7f8c8d; text-transform: uppercase; font-size: 11px; padding: 15px 10px; text-align: left; border-bottom: 2px solid #eee; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f1f2f6; font-size: 13px; }
+        
+        .total-row { background: var(--sidebar-bg); color: white; font-weight: bold; }
+        .total-label { text-align: right; padding: 20px; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+        .total-value { text-align: right; padding: 20px 10px; color: var(--accent-orange); font-size: 1.2rem; }
+
+        #summaryLoading { color: var(--accent-orange); font-weight: 600; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <div class="sidebar">
+        <h2>CEDAAR TEXTILE LIMITED</h2>
+        <button class="nav-btn" onclick="fetchScanData()">🔄 Refresh Data</button>
+        <a href="index.html" class="nav-btn">🏠 Return to Home</a>
+    </div>
+
+    <div class="summary-container">
+        <div class="summary-header">
+            <h1>Scanner Production Log</h1>
+            <div class="date-group">
+                <span>LOT:</span>
+                <input type="text" id="lotInput" class="summary-date-picker search-input" placeholder="Lot No..." oninput="renderReport()">
+                <span>COUNT:</span>
+                <input type="text" id="countInput" class="summary-date-picker search-input" placeholder="Count..." oninput="renderReport()">
+                <span>FROM:</span>
+                <input type="date" id="startDate" class="summary-date-picker" onchange="renderReport()">
+                <span>TO:</span>
+                <input type="date" id="endDate" class="summary-date-picker" onchange="renderReport()">
+            </div>
+        </div>
+
+        <div id="summaryLoading">⚡ SYNCING SCAN DATA...</div>
+
+        <div class="section-title">Production Details</div>
+        <div class="report-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>PC Code (A)</th>
+                        <th>PO ID (B)</th>
+                        <th>Lot No (C)</th>
+                        <th>Ref No (D)</th>
+                        <th>Count (E)</th>
+                        <th>Shade (H)</th>
+                        <th style="text-align: right;">Gross (G)</th>
+                        <th style="text-align: right;">Net Wt (F)</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="9" class="total-label">Grand Totals:</td>
+                        <td id="grandGrossTotal" class="total-value">0.00</td>
+                        <td id="grandNetTotal" class="total-value">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+    
+    let cachedData = [];
+
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+        fetchScanData();
+    };
+
+    async function fetchScanData() {
+        const loader = document.getElementById('summaryLoading');
+        loader.style.display = "block";
+
+        try {
+            const response = await fetch(`${API_URL}?Department=SCAN`);
+            cachedData = await response.json();
+            renderReport(); 
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            document.getElementById('reportTableBody').innerHTML = "<tr><td colspan='11' style='text-align:center; color:red;'>Data fetch failed.</td></tr>";
+        }
+        loader.style.display = "none";
+    }
+
+    function renderReport() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const lotFilter = document.getElementById('lotInput').value.trim().toLowerCase();
+        const countFilter = document.getElementById('countInput').value.trim().toLowerCase();
+        
+        const tableBody = document.getElementById('reportTableBody');
+        const netTotalEl = document.getElementById('grandNetTotal');
+        const grossTotalEl = document.getElementById('grandGrossTotal');
+
+        tableBody.innerHTML = "";
+        
+        let grandNetTotal = 0;
+        let grandGrossTotal = 0;
+        const seenRefs = new Set();
+        let displayRowIndex = 1; 
+
+        cachedData.forEach(row => {
+            const rowValues = Object.values(row);
+
+            const colA = rowValues[0] || '';                
+            const colB = rowValues[1] || '';                
+            const colC = String(rowValues[2] || '').trim(); 
+            const colD = String(rowValues[3] || '').trim(); 
+            const colE = String(rowValues[4] || '').trim(); 
+            const colF = parseFloat(rowValues[5] || 0);     
+            const colG = parseFloat(rowValues[6] || 0);     
+            const colH = rowValues[7] || '';                
+            const colI = String(rowValues[8] || "");        
+            
+            if (!colI) return;
+
+            if (colD && seenRefs.has(colD)) return;
+            if (colD) seenRefs.add(colD);
+
+            let datePart = "";
+            let timePart = "";
+            if (colI.includes('T')) {
+                const dObj = new Date(colI);
+                datePart = `${dObj.getFullYear()}-${("0"+(dObj.getMonth()+1)).slice(-2)}-${("0"+dObj.getDate()).slice(-2)}`;
+                timePart = dObj.toTimeString().split(' ')[0];
+            } else {
+                const parts = colI.split(' ');
+                datePart = parts[0]; 
+                timePart = parts[1] || ""; 
+            }
+
+            const dateMatch = (datePart >= start && datePart <= end);
+            const lotMatch = (lotFilter === "" || colC.toLowerCase().includes(lotFilter));
+            const countMatch = (countFilter === "" || colE.toLowerCase().includes(countFilter));
+
+            if (dateMatch && lotMatch && countMatch) {
+                grandNetTotal += colF;
+                grandGrossTotal += colG;
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: #7f8c8d;">${displayRowIndex++}</td>
+                    <td>${datePart}</td>
+                    <td style="color: #7f8c8d;">${timePart}</td>
+                    <td>${colA}</td> 
+                    <td>${colB}</td>
+                    <td style="font-weight: bold;">${colC}</td>
+                    <td>${colD}</td>
+                    <td>${colE}</td>
+                    <td>${colH}</td>
+                    <td style="text-align: right;">${colG.toFixed(2)}</td>
+                    <td style="text-align: right; font-weight: bold; color: var(--accent-orange);">${colF.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(tr);
+            }
+        });
+
+        netTotalEl.innerText = grandNetTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        grossTotalEl.innerText = grandGrossTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+        if (grandNetTotal === 0) {
+            tableBody.innerHTML = `<tr><td colspan='11' style='text-align:center; padding: 20px; color:#7f8c8d;'>No records found for these filters.</td></tr>`;
+        }
+    }
+</script>
+</body>
+</html>
