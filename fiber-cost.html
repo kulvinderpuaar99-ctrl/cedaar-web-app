@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; }
+        
+        /* Navigation Bar */
+        nav {
+            background-color: #000000; 
+            padding: 15px 0; 
+            text-align: left; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .nav-link { 
+            color: #ffffff; 
+            text-decoration: none; 
+            margin: 0 15px; 
+            font-weight: 500; 
+            font-size: 16px; 
+            transition: color 0.3s; 
+        }
+        .nav-link:hover { color: #e67e22; text-decoration: underline; }
+
+        /* Main Container */
+        .container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+            max-width: 95%; 
+            margin: 20px auto; 
+        }
+
+        h2 { 
+            color: #2c3e50; 
+            border-left: 5px solid #2196f3; 
+            padding-left: 15px; 
+            margin-bottom: 20px; 
+            font-size: 22px; 
+        }
+        
+        /* Controls Section */
+        .header-controls { 
+            display: flex; 
+            gap: 15px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            align-items: flex-end; 
+            background: #e8f4fd; 
+            border: solid 1px #2196f3;
+            flex-wrap: wrap;
+        }
+
+        .control-field { display: flex; flex-direction: column; }
+        label { 
+            font-size: 11px; 
+            font-weight: bold; 
+            color: #636e72; 
+            margin-bottom: 5px; 
+            text-transform: uppercase; 
+        }
+        
+        input[type="date"] { 
+            padding: 8px; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            font-size: 13px; 
+        }
+
+        .btn-fetch { 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            transition: 0.3s; 
+        }
+        
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th { background: #2c3e50; color: white; padding: 10px; text-align: center; border: 1px solid #dee2e6; }
+        td { padding: 10px; border: 1px solid #dee2e6; text-align: center; }
+        
+        /* Report specific coloring */
+        .col-consumption { background: #f4ebf9; }
+        .col-rate { color: #27ae60; font-weight: bold; }
+        .col-amount { background: #fff3e0; font-weight: bold; }
+        .row-po-header { font-weight: bold; color: #1a252f; }
+
+        /* Footer Style for Totals */
+        tfoot tr td { 
+            background: #f8f9fa; 
+            font-weight: bold; 
+            border-top: 2px solid #2980b9 !important; 
+            font-size: 13px; 
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html" class="nav-link">Return to Home🏠</a>
+</nav>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Mixing & Fiber Cost Report</h2>
+        <div style="text-align: right; color: #7f8c8d; font-size: 12px; font-weight: bold;">
+            CEDAAR TEXTILE LIMITED
+        </div>
+    </div>
+
+    <div class="header-controls">
+        <div class="control-field">
+            <label>From Date</label>
+            <input type="date" id="costFromDate">
+        </div>
+        <div class="control-field">
+            <label>To Date</label>
+            <input type="date" id="costToDate">
+        </div>
+        <button class="btn-fetch" onclick="loadCostReport()" style="background:#27ae60">🔄 REFRESH REPORT</button>
+        <button class="btn-fetch" onclick="downloadCostExcel()" style="background:#2c3e50">💾 DOWNLOAD EXCEL</button>
+    </div>
+
+    <table id="costTable">
+        <thead>
+            <tr>
+                <th>Date (Sale Order)</th>
+                <th>PO ID</th>
+                <th>Order Article</th>
+                <th>Total Actual Production (KG)</th>
+                <th>Issue Article (Fiber)</th>
+                <th>Issue %</th>
+                <th style="background:#8e44ad;">Fiber Consumption (KG)</th>
+                <th style="background:#27ae60;">Fiber Rate</th>
+                <th style="background:#e67e22;">Amount</th>
+            </tr>
+        </thead>
+        <tbody id="costReportBody">
+            <tr><td colspan="9">Select dates and click Refresh to load data...</td></tr>
+        </tbody>
+        <tfoot id="costReportFoot"></tfoot>
+    </table>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+
+    // Auto-set dates on load
+    window.onload = function() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('costFromDate').value = formatSafeDate(firstDay);
+        document.getElementById('costToDate').value = formatSafeDate(now);
+        loadCostReport();
+    };
+
+    function formatSafeDate(d) {
+        if (!d) return "";
+        const dateObj = new Date(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    }
+
+    function downloadCostExcel() {
+        const table = document.getElementById("costTable");
+        const fromDate = document.getElementById('costFromDate').value;
+        const toDate = document.getElementById('costToDate').value;
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Cost Report" });
+        XLSX.writeFile(wb, `Mixing_Cost_Report_${fromDate}_to_${toDate}.xlsx`);
+    }
+
+    async function loadCostReport() {
+        const tbody = document.getElementById('costReportBody');
+        const tfoot = document.getElementById('costReportFoot');
+        tbody.innerHTML = "<tr><td colspan='9'>Fetching data from database... Please wait.</td></tr>";
+        tfoot.innerHTML = "";
+        
+        try {
+            const fromDateVal = document.getElementById('costFromDate').value;
+            const toDateVal = document.getElementById('costToDate').value;
+            if (!fromDateVal || !toDateVal) return alert("Please select dates.");
+
+            const fromDate = new Date(fromDateVal); fromDate.setHours(0,0,0,0);
+            const toDate = new Date(toDateVal); toDate.setHours(23,59,59,999);
+
+            const [soResp, fiResp, mixResp, rmResp] = await Promise.all([
+                fetch(`${API_URL}?Department=SALE_ORDER`),
+                fetch(`${API_URL}?Department=FIBER_ISSUE`),
+                fetch(`${API_URL}?Department=MIXING`),
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC`)
+            ]);
+            
+            const soData = await soResp.json();
+            const fiData = await fiResp.json();
+            const mixData = await mixResp.json();
+            const rmData = await rmResp.json();
+            
+            // Map Raw Material Rates
+            const rateMap = {};
+            if(rmData && rmData.length > 0) {
+                const tempMap = {};
+                rmData.forEach(item => {
+                    const desc = item["Item Description"];
+                    const rate = parseFloat(item["Rate"]) || 0;
+                    if(desc && rate > 0) {
+                        if(!tempMap[desc]) tempMap[desc] = [];
+                        tempMap[desc].push(rate);
+                    }
+                });
+                for(let desc in tempMap) {
+                    const sum = tempMap[desc].reduce((a, b) => a + b, 0);
+                    rateMap[desc] = sum / tempMap[desc].length;
+                }
+            }
+
+            // Map Actual Mixing Production within date range
+            const mixMap = {};
+            if(mixData && mixData.length > 0) {
+                mixData.forEach(m => {
+                    if (!m["Date"]) return;
+                    const mDate = new Date(m["Date"]);
+                    if (mDate >= fromDate && mDate <= toDate) {
+                        const po = m["PO ID"];
+                        const qnty = parseFloat(m["Actual Production"]) || 0; 
+                        if(po) mixMap[po] = (mixMap[po] || 0) + qnty;
+                    }
+                });
+            }
+
+            // Map Fiber Issues by PO
+            const fiMap = {};
+            if(fiData && fiData.length > 0) {
+                fiData.forEach(f => {
+                    const po = f["PO ID"];
+                    if(po) {
+                        if(!fiMap[po]) fiMap[po] = [];
+                        fiMap[po].push(f);
+                    }
+                });
+            }
+
+            const soMap = {};
+            if(soData && soData.length > 0) soData.forEach(s => { if(s["PO ID"]) soMap[s["PO ID"]] = s; });
+            
+            tbody.innerHTML = "";
+            let hasData = false;
+            let grandMixing = 0, grandFiber = 0, grandAmount = 0, rateSum = 0, rateCount = 0;
+
+            const targetPOs = Object.keys(mixMap).filter(po => mixMap[po] > 0);
+
+            targetPOs.forEach(po => {
+                const so = soMap[po] || {};
+                const soDate = so["Date"] ? formatSafeDate(so["Date"]) : "-";
+                const article = so["Article"] || "N/A";
+                const totalProductionQnty = mixMap[po];
+                const fibers = fiMap[po] || [];
+                
+                grandMixing += totalProductionQnty;
+
+                if (fibers.length === 0) {
+                    tbody.innerHTML += `<tr>
+                        <td>${soDate}</td><td class="row-po-header">${po}</td><td>${article}</td>
+                        <td style="color:#e67e22; font-weight:bold;">${totalProductionQnty.toFixed(2)}</td>
+                        <td colspan="5" style="color:#7f8c8d; font-style:italic;">No fiber consumption recorded</td>
+                    </tr>`;
+                    hasData = true;
+                } else {
+                    fibers.forEach((f, index) => {
+                        const issueArt = f["Issue Article"] || "-";
+                        const issuePerRaw = parseFloat(f["Issue %"]) || 0;
+                        const avgRate = rateMap[issueArt] || 0;
+                        const consumedQty = (totalProductionQnty * (issuePerRaw / 100));
+                        const totalAmount = consumedQty * avgRate;
+
+                        grandFiber += consumedQty; grandAmount += totalAmount; rateSum += avgRate; rateCount++;
+
+                        tbody.innerHTML += `<tr>
+                            ${index === 0 ? `<td rowspan="${fibers.length}">${soDate}</td><td rowspan="${fibers.length}" class="row-po-header">${po}</td><td rowspan="${fibers.length}">${article}</td><td rowspan="${fibers.length}" style="font-weight:bold; color:#e67e22;">${totalProductionQnty.toFixed(2)}</td>` : ''}
+                            <td>${issueArt}</td><td>${issuePerRaw}%</td><td class="col-consumption">${consumedQty.toFixed(2)}</td><td class="col-rate">${avgRate.toFixed(2)}</td><td class="col-amount">${totalAmount.toFixed(2)}</td>
+                        </tr>`;
+                        hasData = true;
+                    });
+                }
+            });
+
+            if(!hasData) {
+                tbody.innerHTML = "<tr><td colspan='9'>No matching production data found for this range.</td></tr>";
+            } else {
+                const finalAvgRate = rateCount > 0 ? (rateSum / rateCount) : 0;
+                tfoot.innerHTML = `<tr>
+                    <td colspan="3" style="text-align:right;">GRAND TOTAL:</td>
+                    <td>${grandMixing.toFixed(2)}</td>
+                    <td colspan="2"></td>
+                    <td style="background:#8e44ad; color:white;">${grandFiber.toFixed(2)}</td>
+                    <td style="background:#27ae60; color:white;">Avg: ${finalAvgRate.toFixed(2)}</td>
+                    <td style="background:#e67e22; color:white;">${grandAmount.toFixed(2)}</td>
+                </tr>`;
+            }
+        } catch(e) { 
+            console.error(e);
+            tbody.innerHTML = "<tr><td colspan='9' style='color:red;'>Error connecting to database. Please check connection.</td></tr>"; 
+        }
+    }
+</script>
+</body>
+</html>
