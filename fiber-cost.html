@@ -259,11 +259,26 @@
                 const soDate = so["Date"] ? formatSafeDate(so["Date"]) : "-";
                 const article = so["Article"] || "N/A";
                 const totalProductionQnty = mixMap[po];
-                const fibers = fiMap[po] || [];
+                const allFibers = fiMap[po] || [];
+                
+                // --- NEW LOGIC: Deduplicate fibers by Issue Article to prevent double counting on multiple slips ---
+                const uniqueFibersMap = {};
+                allFibers.forEach(f => {
+                    const art = f["Issue Article"] || "-";
+                    // If the same article was issued multiple times in different slips, this keeps only one instance of its %
+                    if (!uniqueFibersMap[art]) {
+                        uniqueFibersMap[art] = f;
+                    }
+                });
+                const uniqueFibers = Object.values(uniqueFibersMap);
+
+                // --- NEW LOGIC: Calculate total percentage to check if it equals exactly 100 ---
+                const totalPercentage = uniqueFibers.reduce((sum, f) => sum + (parseFloat(f["Issue %"]) || 0), 0);
+                const isPercentWarning = Math.abs(totalPercentage - 100) > 0.01; // Avoid floating point exact match bugs
                 
                 grandMixing += totalProductionQnty;
 
-                if (fibers.length === 0) {
+                if (uniqueFibers.length === 0) {
                     tbody.innerHTML += `<tr>
                         <td>${soDate}</td><td class="row-po-header">${po}</td><td>${article}</td>
                         <td style="color:#e67e22; font-weight:bold;">${totalProductionQnty.toFixed(2)}</td>
@@ -271,7 +286,7 @@
                     </tr>`;
                     hasData = true;
                 } else {
-                    fibers.forEach((f, index) => {
+                    uniqueFibers.forEach((f, index) => {
                         const issueArt = f["Issue Article"] || "-";
                         const issuePerRaw = parseFloat(f["Issue %"]) || 0;
                         const avgRate = rateMap[issueArt] || 0;
@@ -280,9 +295,21 @@
 
                         grandFiber += consumedQty; grandAmount += totalAmount; rateSum += avgRate; rateCount++;
 
+                        // Determine if we need to highlight the percentage
+                        let percentStyle = "";
+                        let percentTitle = "";
+                        if (isPercentWarning) {
+                            percentStyle = "background-color: #ffcccc; color: #c0392b; font-weight: bold;";
+                            percentTitle = `title="Warning: Total Percentage for this PO is ${totalPercentage}% (Must be 100%)"`;
+                        }
+
                         tbody.innerHTML += `<tr>
-                            ${index === 0 ? `<td rowspan="${fibers.length}">${soDate}</td><td rowspan="${fibers.length}" class="row-po-header">${po}</td><td rowspan="${fibers.length}">${article}</td><td rowspan="${fibers.length}" style="font-weight:bold; color:#e67e22;">${totalProductionQnty.toFixed(2)}</td>` : ''}
-                            <td>${issueArt}</td><td>${issuePerRaw}%</td><td class="col-consumption">${consumedQty.toFixed(2)}</td><td class="col-rate">${avgRate.toFixed(2)}</td><td class="col-amount">${totalAmount.toFixed(2)}</td>
+                            ${index === 0 ? `<td rowspan="${uniqueFibers.length}">${soDate}</td><td rowspan="${uniqueFibers.length}" class="row-po-header">${po}</td><td rowspan="${uniqueFibers.length}">${article}</td><td rowspan="${uniqueFibers.length}" style="font-weight:bold; color:#e67e22;">${totalProductionQnty.toFixed(2)}</td>` : ''}
+                            <td>${issueArt}</td>
+                            <td style="${percentStyle}" ${percentTitle}>${issuePerRaw}%</td>
+                            <td class="col-consumption">${consumedQty.toFixed(2)}</td>
+                            <td class="col-rate">${avgRate.toFixed(2)}</td>
+                            <td class="col-amount">${totalAmount.toFixed(2)}</td>
                         </tr>`;
                         hasData = true;
                     });
