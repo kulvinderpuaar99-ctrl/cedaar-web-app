@@ -309,6 +309,7 @@
     let currentUser = "";
     let cachedReceipts = [];
     let cachedIssues = [];
+    let cachedArticles = []; // NEW: Cache for Article Master data
     let globalStockMap = {};
 
     window.onload = () => { 
@@ -335,6 +336,7 @@
             document.getElementById('recDate').valueAsDate = new Date();
             loadHistory('RAW_MATERIAL_REC', 'recHistoryBody');
             refreshRecCache();
+            refreshArticleCache(); // NEW: Fetch the Article Master when opening Receipt App
         }
         if(appId === 'rawIssue') {
             document.getElementById('issDate').valueAsDate = new Date();
@@ -350,11 +352,29 @@
         } catch(e){}
     }
 
+    // NEW FUNCTION: Fetch the Article Master data
+    async function refreshArticleCache() {
+        try {
+            const res = await fetch(`${API_URL}?Department=ARTICLE_MASTER&t=${Date.now()}`);
+            cachedArticles = await res.json();
+        } catch(e) {
+            console.error("Error fetching Article Master: ", e);
+        }
+    }
+
+    // MODIFIED FUNCTION: Fetch Items by Category from ARTICLE_MASTER instead of Receipts
     function fetchRecItemsByCategory() {
         const cat = document.getElementById('recCat').value;
         const list = document.getElementById('recItemsList');
         list.innerHTML = "";
-        const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
+        
+        // Filter from the Article Master sheet
+        const items = [...new Set(cachedArticles.filter(r => {
+            // Check headers mapping correctly to user's specified column names, handling potential double spaces
+            const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
+            return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
+        }).map(r => r["Raw Material Article"] || r["Raw Material  Article"] || ""))];
+
         items.forEach(i => { if(i) list.innerHTML += `<option value="${i}">`; });
     }
 
