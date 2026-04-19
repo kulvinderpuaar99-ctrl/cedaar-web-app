@@ -373,7 +373,7 @@
             // Check headers mapping correctly to user's specified column names, handling potential double spaces
             const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
             return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
-        }).map(r => r["Raw Material Article"] || r["Raw Material  Article"] || ""))];
+        }).map(r => r["Article"] || r["Article"] || ""))];
 
         items.forEach(i => { if(i) list.innerHTML += `<option value="${i}">`; });
     }
