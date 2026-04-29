@@ -75,6 +75,129 @@
             cursor: pointer;
         }
 
+        /* --- Subscription Popup Overlay --- */
+        #subscriptionOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(15px);
+            padding: 1rem;
+        }
+
+        .sub-container {
+            background: var(--card-glass);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 850px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .sub-container h2 {
+            margin-top: 0;
+            color: white;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub-container p {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .pricing-cards {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .pricing-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            flex: 1;
+            min-width: 220px;
+            transition: transform 0.3s, border-color 0.3s;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-orange);
+        }
+
+        .pricing-card.popular {
+            border-color: rgba(243, 156, 18, 0.5);
+            background: rgba(243, 156, 18, 0.05);
+        }
+
+        .badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-orange);
+            color: black;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pricing-card h3 {
+            margin-top: 0;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 1.5rem 0;
+        }
+
+        .pricing-card .price span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .pricing-card button {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pricing-card button:hover, .pricing-card.popular button {
+            background: var(--primary-orange);
+            color: black;
+            border-color: var(--primary-orange);
+        }
+
+        .sub-footer {
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
         /* --- Sidebar Navigation --- */
         .sidebar {
             width: 280px;
@@ -161,6 +284,24 @@
             background: rgba(239, 68, 68, 0.2);
         }
 
+        /* --- Admin Controls --- */
+        #adminControls {
+            display: none;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 1rem;
+            flex-shrink: 0;
+        }
+
+        .btn-admin {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
         /* --- Main Workspace --- */
         .workspace {
             flex-grow: 1;
@@ -215,6 +356,38 @@
 </head>
 <body onload="checkLogin()">
 
+    <div id="subscriptionOverlay">
+        <div class="sub-container">
+            <h2>Active Subscription Required</h2>
+            <p>Admin has locked system access. Please choose a subscription plan to resume operations.</p>
+            
+            <div class="pricing-cards">
+                <div class="pricing-card">
+                    <h3>1 Month</h3>
+                    <div class="price">999<span>/mo</span></div>
+                    <button onclick="alert('Redirecting to payment gateway...')">Select Plan</button>
+                </div>
+                
+                <div class="pricing-card popular">
+                    <div class="badge">Most Popular</div>
+                    <h3>6 Months</h3>
+                    <div class="price">4,999<span>/6 mo</span></div>
+                    <button onclick="alert('Redirecting to payment gateway...')">Select Plan</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <h3>12 Months</h3>
+                    <div class="price">9,999<span>/yr</span></div>
+                    <button onclick="alert('Redirecting to payment gateway...')">Select Plan</button>
+                </div>
+            </div>
+
+            <div class="sub-footer">
+                <button class="btn-logout" style="width: auto; padding: 10px 24px;" onclick="logout()">Cancel & Return to Login</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginOverlay">
         <div class="login-card">
             <div style="font-size: 3rem; margin-bottom: 1rem;">🏢</div>
@@ -223,7 +396,7 @@
             <input type="text" id="username" placeholder="Employee Username">
             <input type="password" id="password" placeholder="Access Password">
             <button onclick="handleLogin()">Authorize Login</button>
-            <p id="errorMsg" style="color: #ef4444; margin-top:1rem; font-size: 0.85rem; display:none;">Access Denied: Invalid Credentials</p>
+            <p id="errorMsg" style="color: #ef4444; margin-top:1rem; font-size: 0.85rem; display:none; font-weight: 600;">Access Denied: Invalid Credentials</p>
         </div>
     </div>
 
@@ -249,6 +422,11 @@
             <a href="report-download.html" class="nav-item" id="card-download"><span>📦</span> Report Spinning Download</a>
             <a href="report-download-sale-fiber.html" class="nav-item" id="card-downloadsale"><span>📦</span> Report Sale & Fiber Download</a>
         </nav>
+
+        <div id="adminControls">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Admin Setting:</div>
+            <button id="lockBtn" class="btn-admin" onclick="toggleLock()">Lock System</button>
+        </div>
 
         <div class="user-footer">
             <div style="font-size: 0.85rem; color: var(--text-muted);">Logged in as:</div>
@@ -281,25 +459,52 @@
             "sale1": { pass: "123", access: ["card-scan"] },
             "sale": { pass: "sale@123", access: ["card-sales","card-tracking","card-spinning","card-stock","card-downloadsale","card-scan"] },
             "mdc": { pass: "mdc@123", access: ["card-sales","card-tracking","card-downloadsale","card-cost"] },
-            "admin": { pass: "Puaar@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-cost","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
-            "aman": { pass: "123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-cost","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
+            "admin": { pass: "Kp@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-cost","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
             "mis": { pass: "123", access: [ "card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track","card-cost", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] }
         };
+
+        function showError(msg) {
+            const errEl = document.getElementById('errorMsg');
+            errEl.innerText = msg;
+            errEl.style.display = 'block';
+        }
+
+        function triggerSubscriptionPopup() {
+            document.getElementById('subscriptionOverlay').style.display = 'flex';
+        }
 
         function handleLogin() {
             const user = document.getElementById('username').value.trim().toLowerCase();
             const pass = document.getElementById('password').value;
+            const isLocked = localStorage.getItem('cedaar_system_locked') === 'true';
+
             if (db[user] && db[user].pass === pass) {
+                // Subscription Check Layer
+                if (user !== 'admin' && isLocked) {
+                    triggerSubscriptionPopup();
+                    return;
+                }
+
                 localStorage.setItem('cedaar_auth', user);
                 checkLogin();
             } else {
-                document.getElementById('errorMsg').style.display = 'block';
+                showError("Access Denied: Invalid Credentials");
             }
         }
 
         function checkLogin() {
             const user = localStorage.getItem('cedaar_auth');
+            const isLocked = localStorage.getItem('cedaar_system_locked') === 'true';
+
             if (user && db[user]) {
+                // Show popup if a non-admin is already logged in but the system got locked
+                if (user !== 'admin' && isLocked) {
+                    triggerSubscriptionPopup();
+                    return; 
+                }
+
+                document.getElementById('subscriptionOverlay').style.display = 'none';
+                document.getElementById('errorMsg').style.display = 'none';
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('dashboard').style.display = 'flex';
@@ -313,6 +518,37 @@
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'flex';
                 });
+
+                // Show Admin Controls if Admin
+                if (user === 'admin') {
+                    document.getElementById('adminControls').style.display = 'block';
+                    updateLockBtnUI();
+                } else {
+                    document.getElementById('adminControls').style.display = 'none';
+                }
+            }
+        }
+
+        function toggleLock() {
+            const isLocked = localStorage.getItem('cedaar_system_locked') === 'true';
+            localStorage.setItem('cedaar_system_locked', !isLocked);
+            updateLockBtnUI();
+            alert(!isLocked ? "System locked. Other users will now see the subscription popup." : "System unlocked. Normal operations restored.");
+        }
+
+        function updateLockBtnUI() {
+            const isLocked = localStorage.getItem('cedaar_system_locked') === 'true';
+            const btn = document.getElementById('lockBtn');
+            if(isLocked) {
+                btn.innerText = "Unlock System";
+                btn.style.color = "#10b981"; // Green
+                btn.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+                btn.style.background = "rgba(16, 185, 129, 0.1)";
+            } else {
+                btn.innerText = "Lock Users (Require Sub)";
+                btn.style.color = "var(--primary-orange)";
+                btn.style.border = "1px solid rgba(243, 156, 18, 0.4)";
+                btn.style.background = "rgba(243, 156, 18, 0.1)";
             }
         }
 
