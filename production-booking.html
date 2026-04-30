@@ -2,22 +2,19 @@
 <html>
 <head>
     <style>
-        /* --- LOGIN STYLES --- */
+        /* --- ALL ORIGINAL STYLES UNCHANGED --- */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
             display: flex; justify-content: center; align-items: center; z-index: 9999;
         }
         .login-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center; }
-        .login-card h2 { margin-top: 0; color: #e67e22; border: none; padding: 0; font-size: 24px; }
+        .login-card h2 { margin-top: 0; color: #2c3e50; border: none; padding: 0; }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
         .login-btn:hover { background: #d35400; }
         
-        /* --- MAIN APP WRAPPER (Initially Hidden) --- */
         #mainAppWrapper { display: none; }
-
-        /* --- ERP DASHBOARD & APP STYLES --- */
         #dashboard { display: flex; height: 100vh; background-image: url('Gemini_Generated_Image_pvg3hepvg3hepvg3.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
         .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.5); z-index: 2; }
         .logo-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
@@ -45,6 +42,7 @@
         .mc-label { font-weight: bold; color: #2c3e50; background: #f1f2f6; width: 60px; }
         .prod-output { background: #e8f5e9 !important; border: none; text-align: center; font-weight: bold; color: #2e7d32; pointer-events: none; }
         .prev-booked-box { background: #fce4ec; color: #c2185b; font-weight: bold; border: none; text-align: center; }
+        .ring-booked-box { background: #e8eaf6; color: #3f51b5; font-weight: bold; border: none; text-align: center; }
         .mixing-booked-box { background: #e0f2f1; color: #00796b; font-weight: bold; border: none; text-align: center; }
         .info-box { background: #e3f2fd; color: #1565c0; border: none; text-align: center; font-weight: bold; }
         .placeholder-msg { text-align: center; padding: 40px; color: #95a5a6; font-style: italic; }
@@ -55,14 +53,22 @@
         .btn-row-submit { background: #2980b9; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 9px; font-weight: bold; }
         .btn-row-submit:disabled { background: #bdc3c7; cursor: not-allowed; }
         .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+        
         .btn-add-row { background: white; color: white; border: none; border-radius: 3px; padding: 4px 6px; cursor: pointer; font-size: 10px; }
     </style>
 </head>
 <body>
+    <nav style="background-color: #000000; padding: 15px 0; text-align: left; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+  <style>
+    .nav-link { color: #ffffff; text-decoration: none; margin: 0 15px; font-weight: 500; font-size: 16px; transition: color 0.3s; }
+    .nav-link:hover { color: #e67e22; text-decoration: underline; }
+  </style>
+  <a href="index.html" class="nav-link">Return to Home🏠</a>
+  </nav>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h2>CEDAAR LOGIN</h2>
+        <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
         <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 20px;">Please enter your credentials</p>
         <input type="text" id="userInp" class="login-input" placeholder="Username">
         <input type="password" id="passInp" class="login-input" placeholder="Password">
@@ -70,14 +76,6 @@
         <p id="loginError" style="color: red; font-size: 11px; margin-top: 10px; display: none;">Invalid Username or Password.</p>
     </div>
 </div>
-
-<nav style="background-color: #000000; padding: 15px 0; text-align: left; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-    <style>
-        .nav-link { color: #ffffff; text-decoration: none; margin: 0 15px; font-weight: 500; font-size: 16px; transition: color 0.3s; }
-        .nav-link:hover { color: #e67e22; text-decoration: underline; }
-    </style>
-    <a href="index.html" class="nav-link">Return to Home🏠</a>
-</nav>
 
 <div id="mainAppWrapper">
     <div id="dashboard">
@@ -120,6 +118,9 @@
                             <option value="AUTOCONER">Autoconer</option>
                             <option value="TFO">TFO</option>
                             <option value="PACKING">Packing</option>
+                            
+                                                        
+                            
                         </optgroup>
                         <optgroup label="Sales" id="saleGroup" style="display:none;"><option value="SALE">Dispatch (Sale)</option></optgroup>
                     </select>
@@ -137,18 +138,24 @@
 <div id="detentionModal"><div class="modal-content"><h3 id="modalTitle" style="color:#e67e22; margin-top:0;">Detention Selection</h3><div id="detentionOptions"></div><div style="text-align:right; margin-top:15px;"><button onclick="closeModal()" style="background:#2980b9; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">DONE</button></div></div></div>
 
 <script>
-    /* --- LOGIN JAVASCRIPT --- */
     const users = [
         { id: "admin", pass: "Kp@123", role: "Administrator" },
         { id: "sale", pass: "sale@123", role: "Production" },
         { id: "prod", pass: "123", role: "Production" },
         { id: "sailesh", pass: "123", role: "Production" },
         { id: "mis", pass: "123", role: "Production" },
-        { id: "mahipal", pass: "123", role: "Production" },
         { id: "pawan", pass: "pawan123", role: "Dispatch" }
     ];
 
     let currentUser = ""; 
+    let globalCustomerList = [];
+    let globalRunningPOList = []; 
+    let specialPOList = [];      
+    let poDataCache = {}; 
+    let rowFetchCounter = {}; 
+    let rowIdSuffix = 0; 
+
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
 
     function checkLogin() {
         const u = document.getElementById('userInp').value;
@@ -159,21 +166,8 @@
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainAppWrapper').style.display = 'block';
             document.getElementById('activeUserInfo').innerText = `LOGGED AS: ${found.id.toUpperCase()} (${found.role})`;
-        } else { 
-            document.getElementById('loginError').style.display = 'block'; 
-        }
+        } else { document.getElementById('loginError').style.display = 'block'; }
     }
-
-    /* --- PRODUCTION APP SCRIPT --- */
-    let globalCustomerList = [];
-    let globalRunningPOList = []; 
-    let specialPOList = [];      
-    let poDataCache = {}; 
-    let fiberIssueCache = {}; 
-    let rowFetchCounter = {}; 
-    let rowIdSuffix = 0; 
-
-    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
 
     async function fetchRunningPOs() {
         try {
@@ -255,7 +249,13 @@
         TFO: { start: 1, end: 13, prefix: "TF-", color: "#e67e22" },
         SIMPLEX: { start: 1, end: 10, prefix: "SX-", color: "#2980b9" },
         DRAWFRAME: { start: 1, end: 12, prefix: "DF-", color: "#8e44ad" },
-        CARDING: { machines: [...Array.from({length: 20}, (_, i) => `CR-${i + 1}`), ...Array.from({length: 14}, (_, i) => `DK-${i + 1}`)], color: "#2c3e50" },
+        CARDING: { 
+        machines: [
+            ...Array.from({length: 20}, (_, i) => `CR-${i + 1}`),
+            ...Array.from({length: 14}, (_, i) => `DK-${i + 1}`)
+        ], 
+        color: "#2c3e50" 
+    }, 
         SALE: { start: 1, end: 1, prefix: "DS-", color: "#27ae60" }
     };
 
@@ -280,7 +280,12 @@
             headerHtml += `<th style="background:${config.color}">MC #</th><th style="background:${config.color}">PO ID</th><th style="background:#e67e22">Sale Type</th><th style="background:#1565c0">Customer Name</th><th style="background:#1565c0">Invoice Number</th><th style="background:#1565c0">Article</th><th style="background:#1565c0">Order Qnty</th><th style="background:#1565c0">Lot Number</th><th style="background:#c2185b">Prev. Sale</th><th style="background:#27ae60">Net WT</th><th style="background:#27ae60">Gross WT</th><th style="background:#27ae60">Bags</th><th style="background:#27ae60">Cones</th><th style="background:#27ae60">Reff. No.</th><th style="background:#2e7d32">Total Net WT</th><th style="background:#2e7d32">Total Gross WT</th><th style="background:#d35400">Sale Rate</th><th style="background:${config.color}">Remarks</th><th style="background:#2c3e50">Action</th>`;
         } else {
             headerHtml += `<th style="background:${config.color}">MC #</th><th style="background:${config.color}">PO ID</th>`;
-            if (type === 'PACKING') { headerHtml += `<th style="background:#e67e22">Packing Type</th>`; }
+            
+            // --- HEADER LOGIC ---
+            if (type === 'PACKING') {
+                headerHtml += `<th style="background:#e67e22">Packing Type</th>`;
+            }
+
             headerHtml += `<th style="background:#1565c0">Article</th><th style="background:#1565c0">Ord Qnty</th><th style="background:#1565c0">Lot Number</th>`;
             if (type === 'MIXING' || type === 'PACKING' || type === 'CARDING') headerHtml += `<th style="background:#1565c0">Shade Reff..</th>`;
             headerHtml += `<th style="background:#c2185b">Prev Book</th>`;
@@ -319,6 +324,7 @@
 
     function createRow(mcName, afterElement = null) {
         const type = document.getElementById('formType').value;
+        const config = CONFIGS[type];
         const rowId = (afterElement) ? `row-${mcName}-${++rowIdSuffix}` : `row-${mcName}`;
         const tr = document.createElement('tr');
         tr.id = rowId; tr.dataset.mc = mcName;
@@ -336,6 +342,7 @@
             let drVal = (type === 'AUTOCONER' || type === 'TFO') ? "" : defSp;
             let spRo = (type === 'AUTOCONER' || type === 'TFO') ? '' : 'readonly';
 
+            // --- DROP DOWN FOR PACKING ---
             if (type === 'PACKING') {
                 rowHtml += `<td><select class="data-sale-type"><option value="">-- Select --</option><option value="Fresh Pack">Fresh Pack</option><option value="Re-Pack">Re-Pack</option><option value="Return">Return</option></select></td>`;
             }
@@ -365,11 +372,9 @@
         
         if (type === 'SALE' && globalCustomerList.length > 0) {
             let s = tr.querySelector('.data-cust-name-dropdown');
-            if(s) {
-                let o = `<option value="">-- Select Party --</option>`;
-                globalCustomerList.forEach(name => { o += `<option value="${name}">${name}</option>`; });
-                s.innerHTML = o;
-            }
+            let o = `<option value="">-- Select Party --</option>`;
+            globalCustomerList.forEach(name => { o += `<option value="${name}">${name}</option>`; });
+            s.innerHTML = o;
         }
         const poSelect = tr.querySelector('.data-po');
         const listToUse = (type === 'SALE' || type === 'AUTOCONER' || type === 'PACKING' || type === 'TFO') ? specialPOList : globalRunningPOList;
@@ -390,33 +395,27 @@
         }
     }
 
-    async function fetchFiberIssue(poID) {
-        if(fiberIssueCache[poID] !== undefined) return fiberIssueCache[poID];
-        try {
-            const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(poID)}&Department=FIBER_ISSUE`);
-            const data = await resp.json();
-            let totalIssue = 0;
-            if(data && data.length > 0) { totalIssue = data.reduce((sum, item) => sum + (parseFloat(item["Issue Qnty"]) || 0), 0); }
-            fiberIssueCache[poID] = totalIssue;
-            return totalIssue;
-        } catch (e) { fiberIssueCache[poID] = 0; return 0; }
-    }
-
     async function handlePOChange(mcName, rowId) {
         const row = document.getElementById(rowId);
         const currentPO = getValue(row, '.data-po').trim(); if (!currentPO) return;
         setRowLoading(rowId, true);
-        await fetchFiberIssue(currentPO);
+
         const rows = document.querySelectorAll('#machineTableBody tr');
         let sourceRow = null;
-        for (let r of rows) { if (r.id !== rowId && r.querySelector('.data-po').value === currentPO) { if (r.querySelector('.data-article').value !== "") { sourceRow = r; break; } } }
+        for (let r of rows) {
+            if (r.id !== rowId && r.querySelector('.data-po').value === currentPO) {
+                if (r.querySelector('.data-article').value !== "") { sourceRow = r; break; }
+            }
+        }
 
         if (sourceRow) {
             const fieldsToCopy = ['.data-count', '.data-speed', '.data-tpi', '.data-effi', '.data-shade-reff', '.data-article'];
             fieldsToCopy.forEach(selector => {
                 const sEl = sourceRow.querySelector(selector);
                 const tEl = row.querySelector(selector);
-                if (sEl && tEl) { if (sEl.tagName === 'SELECT') { tEl.innerHTML = sEl.innerHTML; tEl.value = sEl.value; } else { tEl.value = sEl.value; } }
+                if (sEl && tEl) {
+                    if (sEl.tagName === 'SELECT') { tEl.innerHTML = sEl.innerHTML; tEl.value = sEl.value; } else { tEl.value = sEl.value; }
+                }
             });
             row.querySelector('.data-ord-qnty').value = sourceRow.querySelector('.data-ord-qnty').value;
             if (row.querySelector('.data-lot')) row.querySelector('.data-lot').value = sourceRow.querySelector('.data-lot').value;
@@ -433,6 +432,7 @@
         const poID = getValue(row, '.data-po').trim();
         const type = document.getElementById('formType').value;
         const isSelectableDept = (type === 'SALE' || type === 'PACKING' || type === 'TFO');
+
         try {
             const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(poID)}&Department=SALE_ORDER`);
             const data = await resp.json(); poDataCache[poID] = data;
@@ -477,12 +477,14 @@
         const currentDept = document.getElementById('formType').value;
         const isSelectableArticle = (currentDept === 'SALE' || currentDept === 'PACKING' || currentDept === 'TFO');
         if (!poID || (isSelectableArticle && !article)) return;
+
         try {
             const url = `${API_URL}?POID=${encodeURIComponent(poID)}&Article=${encodeURIComponent(article)}&Department=${encodeURIComponent(currentDept)}`;
             const resp = await fetch(url);
             const data = await resp.json();
             row.querySelector('.prev-booked-box').value = (Array.isArray(data)) ? data.reduce((acc, entry) => acc + (parseFloat(entry["Actual Production"]) || 0), 0).toFixed(2) : "0.00";
         } catch (e) { row.querySelector('.prev-booked-box').value = "0.00"; }
+
         if (currentDept !== 'MIXING' && currentDept !== 'SALE') {
             try {
                 const mixUrl = `${API_URL}?POID=${encodeURIComponent(poID)}&Department=MIXING`;
@@ -504,27 +506,34 @@
         if (!po) return alert("Select PO ID first");
 
         const inputs = row.querySelectorAll('input, select');
-        for (let input of inputs) { if (input.classList.contains('data-remarks') || input.classList.contains('data-det-type') || input.classList.contains('data-det-min')) continue; if (input.value.trim() === "") { input.style.border = "2px solid red"; alert(`Fill all fields for ${mcName}.`); return; } else { input.style.border = "1px solid #ced4da"; } }
+        for (let input of inputs) {
+            if (input.classList.contains('data-remarks') || input.classList.contains('data-det-type') || input.classList.contains('data-det-min')) continue;
+            if (input.value.trim() === "") { input.style.border = "2px solid red"; alert(`Fill all fields for ${mcName}.`); return; } else { input.style.border = "1px solid #ced4da"; }
+        }
 
+        // --- MIXING VALIDATION LOGIC ---
         const restrictedDepts = ['CARDING', 'DRAWFRAME', 'SIMPLEX', 'RING', 'AUTOCONER'];
         if (restrictedDepts.includes(type)) {
             const currentProd = parseFloat(getValue(row, '.data-prod', "0"));
             const prevBooked = parseFloat(getValue(row, '.prev-booked-box', "0"));
             const mixingTotal = parseFloat(getValue(row, '.data-mixing-total', "0"));
-            const orderQnty = parseFloat(getValue(row, '.data-ord-qnty', "0"));
-            const issueQnty = parseFloat(fiberIssueCache[po] || 0);
-            let maxAllowed = mixingTotal; 
-            if (issueQnty > 0 && orderQnty > 0) { let wastePercent = 100 - ((orderQnty / issueQnty) * 100); maxAllowed = mixingTotal * ((100 - wastePercent) / 100); }
-            if ((currentProd + prevBooked) > maxAllowed) { alert(`Booking Error for ${mcName}: Total production cannot exceed limit ${maxAllowed.toFixed(2)}.`); return; }
+            
+            if ((currentProd + prevBooked) > mixingTotal) {
+                alert(`Booking Error for ${mcName}: Total production (${(currentProd + prevBooked).toFixed(2)}) cannot exceed Mixing data (${mixingTotal.toFixed(2)}). Max allowed to book now: ${(mixingTotal - prevBooked).toFixed(2)}`);
+                return;
+            }
         }
 
         btn.disabled = true; btn.innerText = "...";
+        
+        // --- DATA MAPPING FOR GOOGLE SHEET ---
         const entry = { 
             "User": currentUser, "Date": dateVal, "Department": type, "Production Shift": shiftVal, "Machine Number": mcName, "PO ID": po, 
             "Sale Type": (type === 'SALE' ? getValue(row, '.data-sale-type') : ""), 
             "Packing Type": (type === 'PACKING' ? getValue(row, '.data-sale-type') : ""),
             "Customer Name": (type === 'SALE' ? getValue(row, '.data-cust-name-dropdown-dropdown') : ""), "Invoice Number": getValue(row, '.data-inv-num'), "Article": getValue(row, '.data-article'), "Order Qnty": getValue(row, '.data-ord-qnty'), "Lot Number": getValue(row, '.data-lot'), "Shade Reff.": getValue(row, '.data-shade-reff'), "Actual Production": getValue(row, '.data-prod', "0"), "Total Net WT": getValue(row, '.data-prod', "0"), "Total Gross WT": getValue(row, '.data-total-gross', "0"), "Count": getValue(row, '.data-count', "0"), "Machine Speed": getValue(row, '.data-speed', "0"), "Machine TPI": getValue(row, '.data-tpi', "0"), "Actual Hank": getValue(row, '.data-hank', "0"), "Number of Spindles": getValue(row, '.data-spindles', "1"), "Idol Spindles": getValue(row, '.data-idol', "0"), "Efficiency %": getValue(row, '.data-effi', "0"), "Detention Type": getValue(row, '.data-det-type'), "Detention Minutes": getValue(row, '.data-det-min', "0"), "Remarks": getValue(row, '.data-remarks'), "Gross WT": getValue(row, '.data-gross', "0"), "Net WT": getValue(row, '.data-net', "0"), "Box": getValue(row, '.data-box', "0"), "Cone": getValue(row, '.data-cone', "0"), "Reff No": getValue(row, '.data-reff'), "Sale Rate": getValue(row, '.data-sale-rate', "0") 
         };
+
         try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: [entry] }) }); btn.innerText = "SAVED"; btn.style.background = "#27ae60"; } catch (e) { alert("Save Error"); btn.disabled = false; btn.innerText = "SAVE"; }
     }
 
@@ -547,17 +556,18 @@
                 for (let input of inputs) { if (input.classList.contains('data-remarks') || input.classList.contains('data-det-type') || input.classList.contains('data-det-min')) continue; if (input.value.trim() === "") { isRowValid = false; input.style.border = "2px solid red"; } }
                 if (!isRowValid) { alert(`Machine ${row.dataset.mc} missing fields.`); return; }
                 
+                // --- MIXING VALIDATION FOR BULK SUBMIT ---
                 if (restrictedDepts.includes(type)) {
                     const currentProd = parseFloat(getValue(row, '.data-prod', "0"));
                     const prevBooked = parseFloat(getValue(row, '.prev-booked-box', "0"));
                     const mixingTotal = parseFloat(getValue(row, '.data-mixing-total', "0"));
-                    const orderQnty = parseFloat(getValue(row, '.data-ord-qnty', "0"));
-                    const issueQnty = parseFloat(fiberIssueCache[po] || 0);
-                    let maxAllowed = mixingTotal;
-                    if (issueQnty > 0 && orderQnty > 0) { let wastePercent = 100 - ((orderQnty / issueQnty) * 100); maxAllowed = mixingTotal * ((100 - wastePercent) / 100); }
-                    if ((currentProd + prevBooked) > maxAllowed) { alert(`Booking Error for ${row.dataset.mc}: Limit exceeded.`); return; }
+                    if ((currentProd + prevBooked) > mixingTotal) {
+                        alert(`Booking Error for ${row.dataset.mc}: Cannot exceed Mixing data limit.`);
+                        return;
+                    }
                 }
 
+                // --- DATA MAPPING FOR GOOGLE SHEET ---
                 allEntries.push({ 
                     "User": currentUser, "Date": dateVal, "Department": type, "Production Shift": shiftVal, "Machine Number": row.dataset.mc, "PO ID": po, 
                     "Sale Type": (type === 'SALE' ? getValue(row, '.data-sale-type') : ""), 
