@@ -189,7 +189,6 @@
                         <option value="Vis. Rich Waste (Viscose)">Vis. Rich Waste (Viscose)</option>
                         <option value="Cot. Rich Waste (CP)">Cot. Rich Waste (CP)</option>
                         <option value="Cot. Rich Waste (CP)">Cot. Rich Waste (CP)</option>
-                       
                     </select>
                 </div>
                 <div class="form-group">
@@ -243,7 +242,7 @@
                 <div class="form-group">
                     <label>Category</label>
                     <select id="issCat" onchange="fetchItemsByCategory()">
-                       <option value="">Select Category</option>
+                        <option value="">Select Category</option>
                         <option value="Useable Waste">Useable Waste</option>
                         <option value="Cot. Rich Waste (Cotton)">Cot. Rich Waste (Cotton)</option>
                         <option value="Poly. Rich Waste (PC)">Poly. Rich Waste (PC)</option>
@@ -251,8 +250,6 @@
                         <option value="Vis. Rich Waste (Viscose)">Vis. Rich Waste (Viscose)</option>
                         <option value="Cot. Rich Waste (CP)">Cot. Rich Waste (CP)</option>
                         <option value="Cot. Rich Waste (CP)">Cot. Rich Waste (CP)</option>
-                       
-
                     </select>
                 </div>
                 <div class="form-group"><label>Item Description</label><select id="issItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
@@ -296,7 +293,7 @@
     let currentUser = "";
     let cachedReceipts = [];
     let cachedIssues = [];
-    let cachedArticles = [];
+    let cachedArticles = []; // NEW: Cache for Article Master data
     let globalStockMap = {};
 
     window.onload = () => { 
@@ -321,24 +318,25 @@
         document.getElementById(appId + 'App').style.display = 'block';
         if(appId === 'rawRec') {
             document.getElementById('recDate').valueAsDate = new Date();
-            loadHistory('RAW_MATERIAL_REC', 'recHistoryBody');
+            loadHistory('WASTE_REC', 'recHistoryBody');
             refreshRecCache();
-            refreshArticleCache();
+            refreshArticleCache(); // NEW: Fetch the Article Master when opening Receipt App
         }
         if(appId === 'rawIssue') {
             document.getElementById('issDate').valueAsDate = new Date();
-            loadHistory('RAW_MATERIAL_ISSUE', 'issHistoryBody');
+            loadHistory('WASTE_ISSUE', 'issHistoryBody');
         }
         if(appId === 'balanceStock') loadBalanceStock();
     }
 
     async function refreshRecCache() {
         try { 
-            const res = await fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`); 
+            const res = await fetch(`${API_URL}?Department=WASTE_REC&t=${Date.now()}`); 
             cachedReceipts = await res.json(); 
         } catch(e){}
     }
 
+    // NEW FUNCTION: Fetch the Article Master data
     async function refreshArticleCache() {
         try {
             const res = await fetch(`${API_URL}?Department=ARTICLE_MASTER&t=${Date.now()}`);
@@ -348,12 +346,15 @@
         }
     }
 
+    // MODIFIED FUNCTION: Fetch Items by Category from ARTICLE_MASTER instead of Receipts
     function fetchRecItemsByCategory() {
         const cat = document.getElementById('recCat').value;
         const list = document.getElementById('recItemsList');
         list.innerHTML = "";
         
+        // Filter from the Article Master sheet
         const items = [...new Set(cachedArticles.filter(r => {
+            // Check headers mapping correctly to user's specified column names, handling potential double spaces
             const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
             return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
         }).map(r => r["Article"] || r["Article"] || ""))];
@@ -373,15 +374,17 @@
                 let isoDate = "";
                 if(row["Date"]) {
                     const d = new Date(row["Date"]);
-                    dateStr = d.toLocaleDateString('en-GB'); 
                     
+                    // FIXED: Generate strict strings for predictable parsing & Excel output
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
-                    isoDate = `${y}-${m}-${day}`;
+                    
+                    dateStr = `${day}/${m}/${y}`; // Consistent DD/MM/YYYY text for display & download
+                    isoDate = `${y}-${m}-${day}`; // ISO format for logic/filtering
                 }
                 
-                if(dept === 'RAW_MATERIAL_REC') {
+                if(dept === 'WASTE_REC') {
                     body.innerHTML += `<tr data-date="${isoDate}">
                         <td>${dateStr}</td>
                         <td>${row["Category"]||""}</td>
@@ -423,8 +426,8 @@
         tbody.innerHTML = "<tr><td colspan='7'>Calculating...</td></tr>";
         try {
             const [rR, rI] = await Promise.all([
-                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
-                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+                fetch(`${API_URL}?Department=WASTE_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=WASTE_ISSUE&t=${Date.now()}`)
             ]);
             const recs = await rR.json(); const iss = await rI.json();
             globalStockMap = {};
@@ -475,8 +478,8 @@
         sel.innerHTML = '<option>Loading...</option>';
         try {
             const [rR, rI] = await Promise.all([
-                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
-                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+                fetch(`${API_URL}?Department=WASTE_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=WASTE_ISSUE&t=${Date.now()}`)
             ]);
             cachedReceipts = await rR.json(); cachedIssues = await rI.json();
             const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
@@ -502,7 +505,7 @@
 
     function submitRawRec() {
         const d = { 
-            "Department": "RAW_MATERIAL_REC", 
+            "Department": "WASTE_REC", 
             "Date": document.getElementById('recDate').value, 
             "Supplier Name": document.getElementById('recSupplier').value, 
             "Gate Pass / Invoice": document.getElementById('recGatePass').value, 
@@ -515,12 +518,12 @@
             "Remarks": document.getElementById('recRemarks').value, 
             "User": currentUser 
         };
-        executePost(d, "Saved!", "rawRecForm", "RAW_MATERIAL_REC", "recHistoryBody");
+        executePost(d, "Saved!", "rawRecForm", "WASTE_REC", "recHistoryBody");
     }
 
     function submitRawIssue() {
         const d = { 
-            "Department": "RAW_MATERIAL_ISSUE", 
+            "Department": "WASTE_ISSUE", 
             "Date": document.getElementById('issDate').value, 
             "Issue Slip No.": document.getElementById('issSlip').value, 
             "Issuing To (Dept)": document.getElementById('issDept').value, 
@@ -533,99 +536,89 @@
             "Remarks": document.getElementById('issRemarks').value, 
             "User": currentUser 
         };
-        executePost(d, "Saved!", "rawIssueForm", "RAW_MATERIAL_ISSUE", "issHistoryBody");
+        executePost(d, "Saved!", "rawIssueForm", "WASTE_ISSUE", "issHistoryBody");
     }
 
-    // MODIFIED: Fix Date Formatting inside filtered downloads by explicitly constructing Data Array
     function downloadFilteredExcel(tableId, fromId, toId, fileName) {
-        const fromDate = document.getElementById(fromId).value; // YYYY-MM-DD
+        const fromDate = document.getElementById(fromId).value;
         const toDate = document.getElementById(toId).value;
         if(!fromDate || !toDate) { alert("Please select both From and To dates"); return; }
-        
         const table = document.getElementById(tableId);
-        let exportData = [];
-        
-        // Extract Headers
-        let headers = [];
-        for (let i = 0; i < table.rows[0].cells.length; i++) {
-            headers.push(table.rows[0].cells[i].innerText);
-        }
-        exportData.push(headers);
-
-        // Extract and process filtered rows
+        const tempTable = document.createElement('table');
+        tempTable.appendChild(table.rows[0].cloneNode(true));
         Array.from(table.rows).slice(1).forEach(row => {
-            const rowDate = row.getAttribute('data-date'); // YYYY-MM-DD
-            if (rowDate && rowDate >= fromDate && rowDate <= toDate) {
-                let rowData = [];
-                for (let i = 0; i < row.cells.length; i++) {
-                    let val = row.cells[i].innerText;
-                    
-                    // Force strictly formatted string (DD/MM/YYYY) for Date column to prevent Excel auto-correction
-                    if (i === 0 && rowDate) {
-                        let [yyyy, mm, dd] = rowDate.split('-');
-                        val = `${dd}/${mm}/${yyyy}`; 
-                    } 
-                    // Parse numbers correctly for numeric columns (to remove Excel warnings)
-                    else if (i > 4 && !isNaN(val.replace(/,/g, ''))) {
-                        val = parseFloat(val.replace(/,/g, ''));
-                    }
-                    
-                    rowData.push(val);
-                }
-                exportData.push(rowData);
+            const rowDate = row.getAttribute('data-date');
+            if(rowDate && rowDate >= fromDate && rowDate <= toDate) {
+                tempTable.appendChild(row.cloneNode(true));
             }
         });
-
-        if(exportData.length <= 1) { alert("No data found for this date range"); return; }
+        if(tempTable.rows.length <= 1) { alert("No data found for this date range"); return; }
         
-        const ws = XLSX.utils.aoa_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-        XLSX.writeFile(wb, `${fileName}_${fromDate}_to_${toDate}.xlsx`);
+        // FIXED: Adding { raw: true } forces Excel to read the strict DD/MM/YYYY text without guessing formats or injecting time.
+        XLSX.writeFile(XLSX.utils.table_to_book(tempTable, { raw: true }), `${fileName}_${fromDate}_to_${toDate}.xlsx`);
     }
 
-    // MODIFIED: Professional column splitting for Monthly Stock Report based on underlying global data
+    // FIXED: Totally rebuilt exportToExcel to professionally split Stock Report data into separate columns instead of copying the cramped HTML.
     function exportToExcel() { 
-        let data = [];
-        
-        // Setup Professional Split Headers
-        data.push([
-            "Category", "Item Description", 
-            "Opening KG", "Opening Bales", "Opening Amount",
-            "Received KG", "Received Bales", "Received Amount",
-            "Issued KG", "Issued Bales", "Issued Amount",
-            "Closing KG", "Closing Bales", "Closing Amount",
-            "Status"
-        ]);
-
+        const sK = document.getElementById('viewKg').checked;
+        const sB = document.getElementById('viewBales').checked;
+        const sA = document.getElementById('viewAmt').checked;
         const hZ = document.getElementById('hideZero').checked;
 
-        // Iterate through calculated stock state, completely skipping the messy HTML structure
+        let ws_data = [];
+        
+        // 1. Build the Header Row dynamically based on user's checkboxes
+        let headers = ["Category", "Item Description"];
+        if(sK) headers.push("Opening KG"); if(sB) headers.push("Opening Bales"); if(sA) headers.push("Opening Amount");
+        if(sK) headers.push("Received KG"); if(sB) headers.push("Received Bales"); if(sA) headers.push("Received Amount");
+        if(sK) headers.push("Issued KG"); if(sB) headers.push("Issued Bales"); if(sA) headers.push("Issued Amount");
+        if(sK) headers.push("Closing KG"); if(sB) headers.push("Closing Bales"); if(sA) headers.push("Closing Amount");
+        headers.push("Status");
+        ws_data.push(headers);
+
+        let gOK=0, gOB=0, gOA=0, gRK=0, gRB=0, gRA=0, gIK=0, gIB=0, gIA=0, gCK=0, gCB=0, gCA=0;
+
+        // 2. Map Background Data directly to Columns
         for(let k in globalStockMap) {
             let e = globalStockMap[k];
             let ck = e.opKg + e.reKg - e.isKg;
             let cb = e.opBal + e.reBal - e.isBal;
             let ca = e.opAmt + e.reAmt - e.isAmt;
-
+            
             if(hZ && ck <= 0) continue;
+            
+            gOK+=e.opKg; gOB+=e.opBal; gOA+=e.opAmt; 
+            gRK+=e.reKg; gRB+=e.reBal; gRA+=e.reAmt; 
+            gIK+=e.isKg; gIB+=e.isBal; gIA+=e.isAmt; 
+            gCK+=ck; gCB+=cb; gCA+=ca;
 
-            data.push([
-                e.category,
-                e.item,
-                parseFloat(e.opKg.toFixed(2)), parseFloat(e.opBal.toFixed(0)), parseFloat(e.opAmt.toFixed(2)),
-                parseFloat(e.reKg.toFixed(2)), parseFloat(e.reBal.toFixed(0)), parseFloat(e.reAmt.toFixed(2)),
-                parseFloat(e.isKg.toFixed(2)), parseFloat(e.isBal.toFixed(0)), parseFloat(e.isAmt.toFixed(2)),
-                parseFloat(ck.toFixed(2)), parseFloat(cb.toFixed(0)), parseFloat(ca.toFixed(2)),
-                ck <= 0 ? 'NIL' : 'OK'
-            ]);
+            let row = [e.category, e.item];
+            
+            if(sK) row.push(Number(e.opKg.toFixed(2))); if(sB) row.push(Number(e.opBal.toFixed(0))); if(sA) row.push(Number(e.opAmt.toFixed(2)));
+            if(sK) row.push(Number(e.reKg.toFixed(2))); if(sB) row.push(Number(e.reBal.toFixed(0))); if(sA) row.push(Number(e.reAmt.toFixed(2)));
+            if(sK) row.push(Number(e.isKg.toFixed(2))); if(sB) row.push(Number(e.isBal.toFixed(0))); if(sA) row.push(Number(e.isAmt.toFixed(2)));
+            if(sK) row.push(Number(ck.toFixed(2))); if(sB) row.push(Number(cb.toFixed(0))); if(sA) row.push(Number(ca.toFixed(2)));
+            
+            row.push(ck <= 0 ? 'NIL' : 'OK');
+            ws_data.push(row);
         }
 
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        const wb = XLSX.utils.book_new();
+        // 3. Add Totals Row
+        let foot = ["TOTAL", ""];
+        if(sK) foot.push(Number(gOK.toFixed(2))); if(sB) foot.push(Number(gOB.toFixed(0))); if(sA) foot.push(Number(gOA.toFixed(2)));
+        if(sK) foot.push(Number(gRK.toFixed(2))); if(sB) foot.push(Number(gRB.toFixed(0))); if(sA) foot.push(Number(gRA.toFixed(2)));
+        if(sK) foot.push(Number(gIK.toFixed(2))); if(sB) foot.push(Number(gIB.toFixed(0))); if(sA) foot.push(Number(gIA.toFixed(2)));
+        if(sK) foot.push(Number(gCK.toFixed(2))); if(sB) foot.push(Number(gCB.toFixed(0))); if(sA) foot.push(Number(gCA.toFixed(2)));
+        foot.push("");
+        ws_data.push(foot);
+
+        // 4. Generate the File
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        let wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
         XLSX.writeFile(wb, "Stock_Report.xlsx");
     }
-
+    
     function filterStockTable() { let val = document.getElementById("stockFilter").value.toUpperCase(); Array.from(document.getElementById("stockTableBody").rows).forEach(r => r.style.display = r.textContent.toUpperCase().includes(val) ? "" : "none"); }
 </script>
 </body>
