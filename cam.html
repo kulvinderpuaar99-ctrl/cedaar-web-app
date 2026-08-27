@@ -9,14 +9,35 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 20px auto;
+      /* Removed the max-width restriction so the camera can go edge-to-edge */
+      margin: 0;
+      padding: 0; 
       text-align: center;
-      padding: 10px;
     }
+    
+    /* Camera Container full width */
     #reader {
       width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
     }
+    /* Force camera video to fit container */
+    #reader video {
+      width: 100% !important;
+      height: auto !important;
+      object-fit: cover;
+    }
+
+    /* Restrict other elements so text/buttons remain readable */
+    h2, #status, .history-section {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 15px;
+      padding-right: 15px;
+      box-sizing: border-box;
+    }
+
     #status {
       margin-top: 15px;
       padding: 10px;
@@ -24,6 +45,7 @@
       background-color: #f0f0f0;
       font-weight: bold;
     }
+    
     /* Styles for History Table */
     .history-section {
       margin-top: 30px;
@@ -67,7 +89,10 @@
 <body>
 
   <h2>QR Code Collector</h2>
+  
+  <!-- Camera takes full screen width now -->
   <div id="reader"></div>
+  
   <div id="status">Initializing Camera...</div>
 
   <div class="history-section">
@@ -81,7 +106,7 @@
   </div>
 
   <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdJQv73TSXCWOIXoMHMSFYbJHnQDECgyT4yntGpog5XG-dY1DThBGeU89juzxVIRgDlA/exec";
     
     let isProcessing = false;
     let storedScans = JSON.parse(localStorage.getItem("qr_scan_history")) || [];
@@ -272,10 +297,13 @@
       }
     }
 
-    // Initialize scanner (FPS set to 30 for fast scanning)
+    // Dynamically calculate scanning box size (70% of device width, up to a max of 300px)
+    let boxSize = Math.min(window.innerWidth * 0.7, 300);
+
+    // Initialize scanner with responsive box size
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
-      { fps: 30, qrbox: { width: 250, height: 250 } },
+      { fps: 30, qrbox: { width: boxSize, height: boxSize } },
       /* verbose= */ false
     );
 
