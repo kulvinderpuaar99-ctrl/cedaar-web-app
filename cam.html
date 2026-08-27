@@ -9,7 +9,6 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      /* Removed the max-width restriction so the camera can go edge-to-edge */
       margin: 0;
       padding: 0; 
       text-align: center;
@@ -90,7 +89,6 @@
 
   <h2>QR Code Collector</h2>
   
-  <!-- Camera takes full screen width now -->
   <div id="reader"></div>
   
   <div id="status">Initializing Camera...</div>
@@ -118,9 +116,14 @@
       if (isProcessing) return;
       isProcessing = true;
 
+      // Unblock camera after 1 second so next QR code can be scanned immediately
+      setTimeout(() => {
+        isProcessing = false;
+      }, 1000);
+
       const statusEl = document.getElementById("status");
       statusEl.style.backgroundColor = "#fff3cd";
-      statusEl.innerText = "QR Detected! Processing...";
+      statusEl.innerText = "QR Scanned! Sending in background...";
 
       // Split string by '#' and trim whitespace
       const parts = decodedText.split("#").map(item => item.trim());
@@ -129,7 +132,7 @@
       
       // Force Date format to DD/MM/YYYY
       const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const month = String(now.getMonth() + 1).padStart(2, '0');
       const year = now.getFullYear();
       const dateStr = `${day}/${month}/${year}`;
       
@@ -144,31 +147,19 @@
         synced: false
       };
 
-      // Save to local storage first
+      // Save to local storage first and update table immediately
       storedScans.push(scanRecord);
       saveData();
 
-      // Attempt to send to Google Sheets
+      // Send to Google Sheets asynchronously in the background (NON-BLOCKING)
       sendToGoogleSheets(scanRecord)
         .then(() => {
           statusEl.style.backgroundColor = "#d4edda";
-          statusEl.innerText = "Saved to Google Sheets!";
-          
-          setTimeout(() => {
-            isProcessing = false;
-            statusEl.style.backgroundColor = "#f0f0f0";
-            statusEl.innerText = "Ready for next scan...";
-          }, 2000);
+          statusEl.innerText = "Last scan saved to Google Sheets!";
         })
         .catch(() => {
           statusEl.style.backgroundColor = "#f8d7da";
-          statusEl.innerText = "Offline/Failed. Saved locally to send later.";
-          
-          setTimeout(() => { 
-            isProcessing = false; 
-            statusEl.style.backgroundColor = "#f0f0f0";
-            statusEl.innerText = "Ready for next scan...";
-          }, 2500);
+          statusEl.innerText = "Saved locally (Offline/Pending).";
         });
     }
 
@@ -243,7 +234,7 @@
       if (record) {
         document.getElementById("status").innerText = "Resending data...";
         sendToGoogleSheets(record).then(() => {
-          document.getElementById("status").innerText = "Ready for next scan...";
+          document.getElementById("status").innerText = "Data resent!";
         });
       }
     }
@@ -261,7 +252,6 @@
       
       Promise.all(promises).then(() => {
         document.getElementById("status").innerText = "All pending data synced!";
-        setTimeout(() => { document.getElementById("status").innerText = "Ready for next scan..."; }, 2000);
       });
     }
 
@@ -278,7 +268,6 @@
         
         Promise.all(promises).then(() => {
           document.getElementById("status").innerText = "All data resent successfully!";
-          setTimeout(() => { document.getElementById("status").innerText = "Ready for next scan..."; }, 2000);
         });
       }
     }
@@ -297,10 +286,10 @@
       }
     }
 
-    // Dynamically calculate scanning box size (70% of device width, up to a max of 300px)
+    // Dynamically calculate scanning box size
     let boxSize = Math.min(window.innerWidth * 0.7, 300);
 
-    // Initialize scanner with responsive box size
+    // Initialize scanner (FPS set to 30 for continuous fast scanning)
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
       { fps: 30, qrbox: { width: boxSize, height: boxSize } },
