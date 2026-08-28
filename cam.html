@@ -137,10 +137,15 @@
       const dateStr = `${day}/${month}/${year}`;
       
       const timeStr = now.toLocaleTimeString();
+
+      // Calculate the count for the current date
+      const todayScansCount = storedScans.filter(scan => scan.date === dateStr).length;
+      const currentCount = todayScansCount + 1;
       
       // Create a unique record for local storage
       const scanRecord = {
         id: Date.now(),
+        count: currentCount,
         date: dateStr,
         time: timeStr,
         parts: parts,
@@ -155,7 +160,7 @@
       sendToGoogleSheets(scanRecord)
         .then(() => {
           statusEl.style.backgroundColor = "#d4edda";
-          statusEl.innerText = "Last scan saved to Google Sheets!";
+          statusEl.innerText = `Scan #${currentCount} saved to Google Sheets!`;
         })
         .catch(() => {
           statusEl.style.backgroundColor = "#f8d7da";
@@ -166,6 +171,7 @@
     // Function to handle fetching to Google Apps Script
     function sendToGoogleSheets(record) {
       const payload = {
+        count: record.count,
         date: record.date,
         time: record.time,
         parts: record.parts
@@ -202,6 +208,7 @@
 
       let html = `<table>
         <tr>
+          <th># Count</th>
           <th>Date</th>
           <th>Time</th>
           <th>Data Preview</th>
@@ -214,6 +221,7 @@
 
       reversedScans.forEach(scan => {
         html += `<tr>
+          <td><strong>${scan.count || 1}</strong></td>
           <td>${scan.date}</td>
           <td>${scan.time}</td>
           <td>${scan.parts[0] || ""} ...</td>
