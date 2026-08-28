@@ -211,7 +211,7 @@
           <th># Count</th>
           <th>Date</th>
           <th>Time</th>
-          <th>Data Preview</th>
+          <th>Lot No.</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>`;
@@ -220,11 +220,14 @@
       const reversedScans = [...storedScans].reverse();
 
       reversedScans.forEach(scan => {
+        // Display parts[2] (Column C equivalent); falls back to parts[0] if unavailable
+        const lotNo = (scan.parts && scan.parts[2] !== undefined) ? scan.parts[2] : (scan.parts[0] || "");
+
         html += `<tr>
           <td><strong>${scan.count || 1}</strong></td>
           <td>${scan.date}</td>
           <td>${scan.time}</td>
-          <td>${scan.parts[0] || ""} ...</td>
+          <td>${lotNo}</td>
           <td class="${scan.synced ? 'status-saved' : 'status-pending'}">${scan.synced ? 'Saved' : 'Pending'}</td>
           <td>
             <button onclick="resendSingle(${scan.id})" style="margin-bottom:4px;">Resend</button><br>
